@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { getNotes } from '../storage/noteStorage';
+import {useFocusEffect} from '@react-navigation/native';
+import {getNotes} from '../storage/noteStorage';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({navigation}) => {
   const [notes, setNotes] = useState([]);
 
   const loadNotes = async () => {
@@ -23,10 +23,10 @@ const HomeScreen = ({ navigation }) => {
     }, []),
   );
 
-  const renderNote = ({ item }) => (
+  const renderNote = ({item}) => (
     <TouchableOpacity
       style={styles.noteCard}
-      onPress={() => navigation.navigate('NoteDetail', { note: item })}>
+      onPress={() => navigation.navigate('NoteDetail', {note: item})}>
       <Text style={styles.noteTitle}>
         {item.title || 'Untitled Note'}
       </Text>
