@@ -24,7 +24,9 @@ const HomeScreen = ({ navigation }) => {
   );
 
   const renderNote = ({ item }) => (
-    <TouchableOpacity style={styles.noteCard}>
+    <TouchableOpacity
+      style={styles.noteCard}
+      onPress={() => navigation.navigate('NoteDetail', { note: item })}>
       <Text style={styles.noteTitle}>
         {item.title || 'Untitled Note'}
       </Text>
