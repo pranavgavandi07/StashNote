@@ -7,7 +7,7 @@ import {
   Text,
 } from 'react-native-paper';
 
-function HomeScreen() {
+function HomeScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <Appbar.Header>
@@ -46,7 +46,7 @@ function HomeScreen() {
           mode="contained"
           icon="plus"
           style={{ marginTop: 20 }}
-          onPress={() => { }}>
+          onPress={() => navigation.navigate('AddNote')}>
           Add your first note
         </Button>
       </View>
@@ -55,3 +55,4 @@ function HomeScreen() {
 }
 
 export default HomeScreen;
+

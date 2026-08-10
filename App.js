@@ -1,11 +1,14 @@
-import { PaperProvider } from 'react-native-paper';
+import {PaperProvider} from 'react-native-paper';
+import {NavigationContainer} from '@react-navigation/native';
 
-import HomeScreen from './src/screens/HomeScreen';
+import AppNavigator from './src/navigation/AppNavigator';
 
 function App() {
   return (
     <PaperProvider>
-      <HomeScreen />
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
     </PaperProvider>
   );
 }
