@@ -34,7 +34,9 @@ const EditNoteScreen = ({ route, navigation }) => {
 
             await updateNote(updatedNote);
 
-            navigation.goBack();
+            navigation.popTo('NoteDetail', {
+                note: updatedNote,
+            });
         } catch (error) {
             Alert.alert(
                 'Unable to save',
