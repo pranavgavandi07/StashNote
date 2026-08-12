@@ -66,7 +66,9 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.header}>
         <View>
           <Text style={styles.appName}>StashNote</Text>
-          <Text style={styles.subtitle}>Your thoughts, kept safe.</Text>
+          <Text style={styles.subtitle}>
+            {notes.length === 1 ? '1 note' : `${notes.length} notes`}
+          </Text>
         </View>
 
         <Pressable
