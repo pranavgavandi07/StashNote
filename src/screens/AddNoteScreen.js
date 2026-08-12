@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import {
     Alert,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
-    TouchableOpacity,
     View,
 } from 'react-native';
 import { addNote } from '../storage/noteStorage';
@@ -44,79 +47,160 @@ const AddNoteScreen = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.heading}>Add Note</Text>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <View style={styles.topBar}>
+                <Pressable
+                    style={({ pressed }) => [
+                        styles.backButton,
+                        pressed && styles.pressed,
+                    ]}
+                    onPress={() => navigation.goBack()}>
+                    <Text style={styles.backText}>‹</Text>
+                </Pressable>
 
-            <TextInput
-                style={styles.titleInput}
-                placeholder="Title"
-                value={title}
-                onChangeText={setTitle}
-            />
+                <Text style={styles.screenLabel}>New Note</Text>
 
-            <TextInput
-                style={styles.contentInput}
-                placeholder="Write your note..."
-                value={content}
-                onChangeText={setContent}
-                multiline
-                textAlignVertical="top"
-            />
+                <View style={styles.topBarSpacer} />
+            </View>
 
-            <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSave}
-                disabled={isSaving}>
-                <Text style={styles.saveButtonText}>
-                    {isSaving ? 'Saving...' : 'Save Note'}
-                </Text>
-            </TouchableOpacity>
-        </View>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.content}>
+                <TextInput
+                    style={styles.titleInput}
+                    placeholder="Note title"
+                    placeholderTextColor="#A0A0A0"
+                    value={title}
+                    onChangeText={setTitle}
+                    returnKeyType="next"
+                    maxLength={100}
+                />
+
+                <TextInput
+                    style={styles.contentInput}
+                    placeholder="Start writing..."
+                    placeholderTextColor="#A0A0A0"
+                    value={content}
+                    onChangeText={setContent}
+                    multiline
+                    textAlignVertical="top"
+                />
+
+                <Pressable
+                    style={({ pressed }) => [
+                        styles.saveButton,
+                        pressed && styles.pressed,
+                        isSaving && styles.saveButtonDisabled,
+                    ]}
+                    onPress={handleSave}
+                    disabled={isSaving}>
+                    <Text style={styles.saveButtonText}>
+                        {isSaving ? 'Saving...' : 'Save Note'}
+                    </Text>
+                </Pressable>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        backgroundColor: '#F7F7F5',
+    },
+
+    topBar: {
+        height: 72,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    backButton: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
         backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#E8E8E5',
     },
-    heading: {
-        fontSize: 28,
-        fontWeight: '700',
-        marginBottom: 24,
+
+    backText: {
+        fontSize: 32,
+        lineHeight: 34,
+        color: '#171717',
+        marginTop: -3,
     },
+
+    screenLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#777',
+    },
+
+    topBarSpacer: {
+        width: 42,
+    },
+
+    content: {
+        paddingHorizontal: 20,
+        paddingTop: 18,
+        paddingBottom: 40,
+    },
+
     titleInput: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
         borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 10,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        fontSize: 18,
-        marginBottom: 16,
+        borderColor: '#E8E8E5',
+        paddingHorizontal: 18,
+        paddingVertical: 17,
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#171717',
+        marginBottom: 14,
     },
+
     contentInput: {
+        minHeight: 280,
+        backgroundColor: '#fff',
+        borderRadius: 14,
         borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 10,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        fontSize: 16,
-        minHeight: 220,
+        borderColor: '#E8E8E5',
+        paddingHorizontal: 18,
+        paddingVertical: 17,
+        fontSize: 17,
+        lineHeight: 26,
+        color: '#3F3F3F',
         marginBottom: 20,
     },
+
     saveButton: {
-        backgroundColor: '#111',
-        borderRadius: 10,
-        paddingVertical: 14,
+        backgroundColor: '#171717',
+        borderRadius: 12,
+        paddingVertical: 16,
         alignItems: 'center',
     },
+
+    saveButtonDisabled: {
+        opacity: 0.6,
+    },
+
     saveButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
+    },
+
+    pressed: {
+        opacity: 0.7,
     },
 });
 
 export default AddNoteScreen;
-
