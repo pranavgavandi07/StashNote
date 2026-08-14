@@ -68,6 +68,7 @@ export const formatNoteDate = dateString => {
  * Search works across:
  * - title
  * - content
+ * - category
  */
 export const matchesSearch = (
     note,
@@ -89,9 +90,13 @@ export const matchesSearch = (
         note?.content || ''
     ).toLowerCase();
 
+    const category = getNoteCategory(note)
+        .toLowerCase();
+
     return (
         title.includes(query) ||
-        content.includes(query)
+        content.includes(query) ||
+        category.includes(query)
     );
 };
 
