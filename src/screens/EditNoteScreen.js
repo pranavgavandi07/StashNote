@@ -74,7 +74,6 @@ const EditNoteScreen = ({ route, navigation }) => {
 
     const handleSave = async () => {
         const trimmedTitle = title.trim();
-
         const trimmedContent = content.trim();
 
         if (!trimmedTitle && !trimmedContent) {
@@ -91,19 +90,13 @@ const EditNoteScreen = ({ route, navigation }) => {
 
             const updatedNote = {
                 ...note,
-
                 title: trimmedTitle,
-
                 content: trimmedContent,
-
                 category,
-
                 updatedAt:
                     new Date().toISOString(),
-
                 isFavorite:
                     note.isFavorite ?? false,
-
                 isPinned:
                     note.isPinned ?? false,
             };
@@ -164,9 +157,7 @@ const EditNoteScreen = ({ route, navigation }) => {
                         ? 'interactive'
                         : 'on-drag'
                 }
-                contentContainerStyle={
-                    styles.content
-                }>
+                contentContainerStyle={styles.content}>
                 {/* TITLE */}
                 <View style={styles.inputHeader}>
                     <TextInput
@@ -179,10 +170,8 @@ const EditNoteScreen = ({ route, navigation }) => {
                         maxLength={TITLE_MAX_LENGTH}
                     />
 
-                    <Text
-                        style={styles.characterCount}>
-                        {title.length}/
-                        {TITLE_MAX_LENGTH}
+                    <Text style={styles.characterCount}>
+                        {title.length}/{TITLE_MAX_LENGTH}
                     </Text>
                 </View>
 
@@ -199,10 +188,8 @@ const EditNoteScreen = ({ route, navigation }) => {
                         maxLength={CONTENT_MAX_LENGTH}
                     />
 
-                    <Text
-                        style={styles.characterCount}>
-                        {content.length}/
-                        {CONTENT_MAX_LENGTH}
+                    <Text style={styles.characterCount}>
+                        {content.length}/{CONTENT_MAX_LENGTH}
                     </Text>
                 </View>
 
@@ -213,43 +200,34 @@ const EditNoteScreen = ({ route, navigation }) => {
                     </Text>
 
                     <View style={styles.categoryList}>
-                        {NOTE_CATEGORIES.map(
-                            item => {
-                                const isSelected =
-                                    category === item;
+                        {NOTE_CATEGORIES.map(item => {
+                            const isSelected =
+                                category === item;
 
-                                return (
-                                    <Pressable
-                                        key={item}
-                                        style={({
-                                            pressed,
-                                        }) => [
-                                                styles.categoryButton,
-
-                                                isSelected &&
-                                                styles.categoryButtonActive,
-
-                                                pressed &&
-                                                styles.categoryButtonPressed,
-                                            ]}
-                                        onPress={() =>
-                                            setCategory(
-                                                item,
-                                            )
-                                        }>
-                                        <Text
-                                            style={[
-                                                styles.categoryButtonText,
-
-                                                isSelected &&
-                                                styles.categoryButtonTextActive,
-                                            ]}>
-                                            {item}
-                                        </Text>
-                                    </Pressable>
-                                );
-                            },
-                        )}
+                            return (
+                                <Pressable
+                                    key={item}
+                                    style={({ pressed }) => [
+                                        styles.categoryButton,
+                                        isSelected &&
+                                        styles.categoryButtonActive,
+                                        pressed &&
+                                        styles.categoryButtonPressed,
+                                    ]}
+                                    onPress={() =>
+                                        setCategory(item)
+                                    }>
+                                    <Text
+                                        style={[
+                                            styles.categoryButtonText,
+                                            isSelected &&
+                                            styles.categoryButtonTextActive,
+                                        ]}>
+                                        {item}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
                     </View>
                 </View>
 
@@ -338,6 +316,27 @@ const styles = StyleSheet.create({
         color: '#171717',
     },
 
+    contentInput: {
+        minHeight: 280,
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#E8E8E5',
+        paddingHorizontal: 18,
+        paddingVertical: 17,
+        fontSize: 17,
+        lineHeight: 26,
+        color: '#3F3F3F',
+    },
+
+    characterCount: {
+        alignSelf: 'flex-end',
+        marginTop: 6,
+        marginRight: 4,
+        fontSize: 11,
+        color: '#999',
+    },
+
     categorySection: {
         marginBottom: 20,
     },
@@ -383,27 +382,6 @@ const styles = StyleSheet.create({
 
     categoryButtonTextActive: {
         color: '#fff',
-    },
-
-    contentInput: {
-        minHeight: 280,
-        backgroundColor: '#fff',
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: '#E8E8E5',
-        paddingHorizontal: 18,
-        paddingVertical: 17,
-        fontSize: 17,
-        lineHeight: 26,
-        color: '#3F3F3F',
-    },
-
-    characterCount: {
-        alignSelf: 'flex-end',
-        marginTop: 6,
-        marginRight: 4,
-        fontSize: 11,
-        color: '#999',
     },
 
     saveButton: {

@@ -63,6 +63,91 @@ export const formatNoteDate = dateString => {
 };
 
 /*
+ * Formats a recent note date as a relative time.
+ *
+ * Examples:
+ * - Just now
+ * - 5 min ago
+ * - 2 hours ago
+ * - Yesterday
+ *
+ * Older dates use the normal note date format.
+ */
+export const formatRelativeNoteDate = dateString => {
+    if (!dateString) {
+        return '';
+    }
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    const now = new Date();
+
+    const differenceInMilliseconds =
+        now.getTime() - date.getTime();
+
+    /*
+     * Prevent future timestamps from producing
+     * incorrect negative values.
+     */
+    if (differenceInMilliseconds < 0) {
+        return formatNoteDate(dateString);
+    }
+
+    const differenceInMinutes =
+        Math.floor(
+            differenceInMilliseconds / 60000,
+        );
+
+    if (differenceInMinutes < 1) {
+        return 'Just now';
+    }
+
+    if (differenceInMinutes < 60) {
+        return `${differenceInMinutes} min ago`;
+    }
+
+    const differenceInHours =
+        Math.floor(differenceInMinutes / 60);
+
+    if (differenceInHours < 24) {
+        return differenceInHours === 1
+            ? '1 hour ago'
+            : `${differenceInHours} hours ago`;
+    }
+
+    /*
+     * Check calendar days instead of only using
+     * a 24-hour difference for "Yesterday".
+     */
+    const today = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+    );
+
+    const yesterday = new Date(today);
+    yesterday.setDate(
+        yesterday.getDate() - 1,
+    );
+
+    const noteDay = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+    );
+
+    if (noteDay.getTime() === yesterday.getTime()) {
+        return 'Yesterday';
+    }
+
+    return formatNoteDate(dateString);
+};
+
+/*
  * Checks whether a note matches the search query.
  *
  * Search works across:
