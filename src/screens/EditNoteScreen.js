@@ -12,6 +12,9 @@ import {
 } from 'react-native';
 import { updateNote } from '../storage/noteStorage';
 
+const TITLE_MAX_LENGTH = 100;
+const CONTENT_MAX_LENGTH = 10000;
+
 const EditNoteScreen = ({ route, navigation }) => {
     const { note } = route.params;
 
@@ -19,9 +22,39 @@ const EditNoteScreen = ({ route, navigation }) => {
     const [content, setContent] = useState(note.content || '');
     const [isSaving, setIsSaving] = useState(false);
 
+    const hasUnsavedChanges =
+        title !== (note.title || '') ||
+        content !== (note.content || '');
+
+    const handleBack = () => {
+        if (!hasUnsavedChanges) {
+            navigation.goBack();
+            return;
+        }
+
+        Alert.alert(
+            'Discard Changes?',
+            'You have unsaved changes. Are you sure you want to leave?',
+            [
+                {
+                    text: 'Keep Editing',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Discard',
+                    style: 'destructive',
+                    onPress: () => navigation.goBack(),
+                },
+            ],
+        );
+    };
+
     const handleSave = async () => {
         if (!title.trim() && !content.trim()) {
-            Alert.alert('Empty note', 'Please enter a title or some content.');
+            Alert.alert(
+                'Empty note',
+                'Please enter a title or some content.',
+            );
             return;
         }
 
@@ -60,7 +93,7 @@ const EditNoteScreen = ({ route, navigation }) => {
                         styles.backButton,
                         pressed && styles.pressed,
                     ]}
-                    onPress={() => navigation.goBack()}>
+                    onPress={handleBack}>
                     <Text style={styles.backText}>‹</Text>
                 </Pressable>
 
@@ -72,26 +105,42 @@ const EditNoteScreen = ({ route, navigation }) => {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode={
+                    Platform.OS === 'ios' ? 'interactive' : 'on-drag'
+                }
                 contentContainerStyle={styles.content}>
-                <TextInput
-                    style={styles.titleInput}
-                    placeholder="Note title"
-                    placeholderTextColor="#A0A0A0"
-                    value={title}
-                    onChangeText={setTitle}
-                    returnKeyType="next"
-                    maxLength={100}
-                />
+                <View style={styles.inputHeader}>
+                    <TextInput
+                        style={styles.titleInput}
+                        placeholder="Note title"
+                        placeholderTextColor="#A0A0A0"
+                        value={title}
+                        onChangeText={setTitle}
+                        returnKeyType="next"
+                        maxLength={TITLE_MAX_LENGTH}
+                    />
 
-                <TextInput
-                    style={styles.contentInput}
-                    placeholder="Start writing..."
-                    placeholderTextColor="#A0A0A0"
-                    value={content}
-                    onChangeText={setContent}
-                    multiline
-                    textAlignVertical="top"
-                />
+                    <Text style={styles.characterCount}>
+                        {title.length}/{TITLE_MAX_LENGTH}
+                    </Text>
+                </View>
+
+                <View style={styles.inputHeader}>
+                    <TextInput
+                        style={styles.contentInput}
+                        placeholder="Start writing..."
+                        placeholderTextColor="#A0A0A0"
+                        value={content}
+                        onChangeText={setContent}
+                        multiline
+                        textAlignVertical="top"
+                        maxLength={CONTENT_MAX_LENGTH}
+                    />
+
+                    <Text style={styles.characterCount}>
+                        {content.length}/{CONTENT_MAX_LENGTH}
+                    </Text>
+                </View>
 
                 <Pressable
                     style={({ pressed }) => [
@@ -158,6 +207,10 @@ const styles = StyleSheet.create({
         paddingBottom: 40,
     },
 
+    inputHeader: {
+        marginBottom: 14,
+    },
+
     titleInput: {
         backgroundColor: '#fff',
         borderRadius: 14,
@@ -168,7 +221,6 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: '700',
         color: '#171717',
-        marginBottom: 14,
     },
 
     contentInput: {
@@ -182,7 +234,14 @@ const styles = StyleSheet.create({
         fontSize: 17,
         lineHeight: 26,
         color: '#3F3F3F',
-        marginBottom: 20,
+    },
+
+    characterCount: {
+        alignSelf: 'flex-end',
+        marginTop: 6,
+        marginRight: 4,
+        fontSize: 11,
+        color: '#999',
     },
 
     saveButton: {
@@ -190,6 +249,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
+        marginTop: 6,
     },
 
     saveButtonDisabled: {

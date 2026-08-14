@@ -1,16 +1,46 @@
-import React, { useCallback, useState } from 'react';
+import React, {
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
+
 import {
   FlatList,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
+
 import { useFocusEffect } from '@react-navigation/native';
+
 import { getNotes } from '../storage/noteStorage';
+
+import NoteCard from '../components/NoteCard';
+
+import {
+  SORT_OPTIONS,
+  getDisplayedNotes,
+  getResultLabel,
+  getSortLabel,
+} from '../utils/noteHelpers';
 
 const HomeScreen = ({ navigation }) => {
   const [notes, setNotes] = useState([]);
+
+  const [searchQuery, setSearchQuery] =
+    useState('');
+
+  const [showFavorites, setShowFavorites] =
+    useState(false);
+
+  const [sortOption, setSortOption] = useState(
+    SORT_OPTIONS.RECENTLY_UPDATED,
+  );
+
+  const [showSortOptions, setShowSortOptions] =
+    useState(false);
 
   const loadNotes = async () => {
     const storedNotes = await getNotes();
@@ -23,92 +53,376 @@ const HomeScreen = ({ navigation }) => {
     }, []),
   );
 
-  const formatDate = dateString => {
-    if (!dateString) {
-      return '';
+  const displayedNotes = useMemo(() => {
+    return getDisplayedNotes(notes, {
+      searchQuery,
+      showFavorites,
+      sortOption,
+    });
+  }, [
+    notes,
+    searchQuery,
+    showFavorites,
+    sortOption,
+  ]);
+
+  const hasSearchQuery = Boolean(
+    searchQuery.trim(),
+  );
+
+  const getSubtitle = () => {
+    if (hasSearchQuery) {
+      return getResultLabel(
+        displayedNotes.length,
+        'result',
+        'results',
+      );
     }
 
-    const date = new Date(dateString);
+    if (showFavorites) {
+      return getResultLabel(
+        displayedNotes.length,
+        'favorite',
+        'favorites',
+      );
+    }
 
-    return date.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
+    return getResultLabel(
+      notes.length,
+      'note',
+      'notes',
+    );
+  };
+
+  const handleOpenNote = note => {
+    navigation.navigate('NoteDetail', {
+      note,
     });
   };
 
-  const renderNote = ({ item }) => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.noteCard,
-        pressed && styles.noteCardPressed,
-      ]}
-      onPress={() => navigation.navigate('NoteDetail', { note: item })}>
-      <Text style={styles.noteTitle} numberOfLines={1}>
-        {item.title || 'Untitled Note'}
-      </Text>
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
 
-      {item.content ? (
-        <Text style={styles.noteContent} numberOfLines={3}>
-          {item.content}
+  const handleCreateNote = () => {
+    navigation.navigate('AddNote');
+  };
+
+  const renderNote = ({ item, index }) => {
+    const previousNote =
+      displayedNotes[index - 1];
+
+    const showOtherNotesDivider =
+      !showFavorites &&
+      !item.isPinned &&
+      index > 0 &&
+      previousNote?.isPinned;
+
+    return (
+      <NoteCard
+        note={item}
+        searchQuery={searchQuery}
+        showOtherNotesDivider={
+          showOtherNotesDivider
+        }
+        onPress={() => handleOpenNote(item)}
+      />
+    );
+  };
+
+  const renderSortOption = (
+    value,
+    label,
+  ) => {
+    const isActive = sortOption === value;
+
+    return (
+      <Pressable
+        style={({ pressed }) => [
+          styles.sortOption,
+          isActive &&
+          styles.sortOptionActive,
+          pressed &&
+          styles.sortOptionPressed,
+        ]}
+        onPress={() => {
+          setSortOption(value);
+          setShowSortOptions(false);
+        }}>
+        <Text
+          style={[
+            styles.sortOptionText,
+            isActive &&
+            styles.sortOptionTextActive,
+          ]}>
+          {label}
         </Text>
-      ) : (
-        <Text style={styles.emptyContent}>No content</Text>
-      )}
 
-      <Text style={styles.noteDate}>
-        {formatDate(item.updatedAt || item.createdAt)}
-      </Text>
-    </Pressable>
-  );
+        {isActive && (
+          <Text style={styles.checkmark}>
+            ✓
+          </Text>
+        )}
+      </Pressable>
+    );
+  };
+
+  const renderEmptyState = () => {
+    if (notes.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIcon}>
+            <Text style={styles.emptyIconText}>
+              +
+            </Text>
+          </View>
+
+          <Text style={styles.emptyTitle}>
+            Nothing here yet
+          </Text>
+
+          <Text style={styles.emptyText}>
+            Create your first note and keep it
+            safely in StashNote.
+          </Text>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.emptyButton,
+              pressed &&
+              styles.buttonPressed,
+            ]}
+            onPress={handleCreateNote}>
+            <Text style={styles.emptyButtonText}>
+              Create a Note
+            </Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.noResultsState}>
+        <View style={styles.noResultsIcon}>
+          <Text
+            style={styles.noResultsIconText}>
+            {showFavorites ? '★' : '⌕'}
+          </Text>
+        </View>
+
+        <Text style={styles.noResultsTitle}>
+          {showFavorites
+            ? 'No favorite notes'
+            : 'No notes found'}
+        </Text>
+
+        <Text style={styles.noResultsText}>
+          {showFavorites
+            ? hasSearchQuery
+              ? `No favorite notes match "${searchQuery}".`
+              : 'Mark a note as favorite to find it here.'
+            : `We couldn't find any notes matching "${searchQuery}".`}
+        </Text>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.clearSearchMainButton,
+            pressed &&
+            styles.buttonPressed,
+          ]}
+          onPress={() => {
+            if (hasSearchQuery) {
+              handleClearSearch();
+            } else {
+              setShowFavorites(false);
+            }
+          }}>
+          <Text
+            style={
+              styles.clearSearchMainButtonText
+            }>
+            {hasSearchQuery
+              ? 'Clear Search'
+              : 'Show All Notes'}
+          </Text>
+        </Pressable>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.appName}>StashNote</Text>
+          <Text style={styles.appName}>
+            StashNote
+          </Text>
+
           <Text style={styles.subtitle}>
-            {notes.length === 1 ? '1 note' : `${notes.length} notes`}
+            {getSubtitle()}
           </Text>
         </View>
 
         <Pressable
           style={({ pressed }) => [
             styles.headerAddButton,
-            pressed && styles.buttonPressed,
+            pressed &&
+            styles.buttonPressed,
           ]}
-          onPress={() => navigation.navigate('AddNote')}>
-          <Text style={styles.headerAddText}>+</Text>
+          onPress={handleCreateNote}>
+          <Text style={styles.headerAddText}>
+            +
+          </Text>
         </Pressable>
       </View>
 
-      {notes.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIcon}>
-            <Text style={styles.emptyIconText}>+</Text>
+      {notes.length > 0 && (
+        <>
+          {/* SEARCH */}
+          <View style={styles.searchContainer}>
+            <Text style={styles.searchIcon}>
+              ⌕
+            </Text>
+
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search notes..."
+              placeholderTextColor="#999"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+            />
+
+            {hasSearchQuery && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.clearSearchButton,
+                  pressed &&
+                  styles.buttonPressed,
+                ]}
+                onPress={handleClearSearch}>
+                <Text
+                  style={styles.clearSearchText}>
+                  ×
+                </Text>
+              </Pressable>
+            )}
           </View>
 
-          <Text style={styles.emptyTitle}>Nothing here yet</Text>
+          {/* FILTERS */}
+          <View style={styles.filterRow}>
+            <View style={styles.filterContainer}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.filterButton,
+                  !showFavorites &&
+                  styles.filterButtonActive,
+                  pressed &&
+                  styles.buttonPressed,
+                ]}
+                onPress={() =>
+                  setShowFavorites(false)
+                }>
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    !showFavorites &&
+                    styles.filterButtonTextActive,
+                  ]}>
+                  All Notes
+                </Text>
+              </Pressable>
 
-          <Text style={styles.emptyText}>
-            Create your first note and keep it safely in StashNote.
-          </Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.filterButton,
+                  showFavorites &&
+                  styles.filterButtonActive,
+                  pressed &&
+                  styles.buttonPressed,
+                ]}
+                onPress={() =>
+                  setShowFavorites(true)
+                }>
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    showFavorites &&
+                    styles.filterButtonTextActive,
+                  ]}>
+                  ★ Favorites
+                </Text>
+              </Pressable>
+            </View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.emptyButton,
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={() => navigation.navigate('AddNote')}>
-            <Text style={styles.emptyButtonText}>Create a Note</Text>
-          </Pressable>
-        </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.sortButton,
+                pressed &&
+                styles.buttonPressed,
+              ]}
+              onPress={() =>
+                setShowSortOptions(
+                  previous => !previous,
+                )
+              }>
+              <Text style={styles.sortIcon}>
+                ↕
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* SORT MENU */}
+          {showSortOptions && (
+            <View style={styles.sortMenu}>
+              <Text style={styles.sortMenuTitle}>
+                Sort Notes
+              </Text>
+
+              {renderSortOption(
+                SORT_OPTIONS.RECENTLY_UPDATED,
+                'Recently Updated',
+              )}
+
+              {renderSortOption(
+                SORT_OPTIONS.RECENTLY_CREATED,
+                'Recently Created',
+              )}
+
+              {renderSortOption(
+                SORT_OPTIONS.ALPHABETICAL,
+                'A → Z',
+              )}
+
+              {renderSortOption(
+                SORT_OPTIONS.REVERSE_ALPHABETICAL,
+                'Z → A',
+              )}
+            </View>
+          )}
+
+          <View style={styles.currentSortRow}>
+            <Text style={styles.currentSortText}>
+              {getSortLabel(sortOption)}
+            </Text>
+          </View>
+        </>
+      )}
+
+      {displayedNotes.length === 0 ? (
+        renderEmptyState()
       ) : (
         <FlatList
-          data={notes}
+          data={displayedNotes}
           keyExtractor={item => item.id}
           renderItem={renderNote}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={
+            styles.list
+          }
+          keyboardShouldPersistTaps="handled"
         />
       )}
 
@@ -116,10 +430,14 @@ const HomeScreen = ({ navigation }) => {
         <Pressable
           style={({ pressed }) => [
             styles.floatingButton,
-            pressed && styles.floatingButtonPressed,
+            pressed &&
+            styles.floatingButtonPressed,
           ]}
-          onPress={() => navigation.navigate('AddNote')}>
-          <Text style={styles.floatingButtonText}>+</Text>
+          onPress={handleCreateNote}>
+          <Text
+            style={styles.floatingButtonText}>
+            +
+          </Text>
         </Pressable>
       )}
     </View>
@@ -135,7 +453,7 @@ const styles = StyleSheet.create({
 
   header: {
     paddingTop: 24,
-    paddingBottom: 22,
+    paddingBottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -170,47 +488,167 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
 
-  list: {
-    paddingBottom: 110,
-  },
-
-  noteCard: {
+  searchContainer: {
+    height: 50,
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E8E8E5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    marginBottom: 12,
   },
 
-  noteCardPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.99 }],
+  searchIcon: {
+    fontSize: 25,
+    color: '#777',
+    marginRight: 8,
+    marginTop: -3,
   },
 
-  noteTitle: {
-    fontSize: 19,
-    fontWeight: '700',
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
     color: '#171717',
+    paddingVertical: 0,
+  },
+
+  clearSearchButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F0F0EE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+
+  clearSearchText: {
+    fontSize: 22,
+    lineHeight: 24,
+    color: '#555',
+  },
+
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
 
-  noteContent: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: '#5F5F5F',
+  filterContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#ECECE9',
+    borderRadius: 12,
+    padding: 3,
+    marginRight: 8,
   },
 
-  emptyContent: {
-    fontSize: 15,
+  filterButton: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  filterButtonActive: {
+    backgroundColor: '#171717',
+  },
+
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#777',
+  },
+
+  filterButtonTextActive: {
+    color: '#fff',
+  },
+
+  sortButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E8E8E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  sortIcon: {
+    fontSize: 22,
+    color: '#333',
+  },
+
+  sortMenu: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E8E8E5',
+    padding: 6,
+    marginBottom: 6,
+  },
+
+  sortMenuTitle: {
+    fontSize: 12,
+    fontWeight: '700',
     color: '#999',
-    fontStyle: 'italic',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
-  noteDate: {
-    marginTop: 14,
+  sortOption: {
+    minHeight: 44,
+    paddingHorizontal: 12,
+    borderRadius: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  sortOptionActive: {
+    backgroundColor: '#F0F0EE',
+  },
+
+  sortOptionPressed: {
+    opacity: 0.65,
+  },
+
+  sortOptionText: {
+    fontSize: 14,
+    color: '#555',
+    fontWeight: '500',
+  },
+
+  sortOptionTextActive: {
+    color: '#171717',
+    fontWeight: '700',
+  },
+
+  checkmark: {
+    fontSize: 17,
+    color: '#171717',
+    fontWeight: '700',
+  },
+
+  currentSortRow: {
+    paddingHorizontal: 3,
+    marginBottom: 8,
+  },
+
+  currentSortText: {
     fontSize: 12,
     color: '#999',
+  },
+
+  list: {
+    paddingBottom: 110,
   },
 
   emptyState: {
@@ -260,6 +698,57 @@ const styles = StyleSheet.create({
   },
 
   emptyButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
+  noResultsState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 30,
+    paddingBottom: 80,
+  },
+
+  noResultsIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#EAEAE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+
+  noResultsIconText: {
+    fontSize: 28,
+    color: '#555',
+  },
+
+  noResultsTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#171717',
+    marginBottom: 8,
+  },
+
+  noResultsText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#777',
+    textAlign: 'center',
+    marginBottom: 22,
+  },
+
+  clearSearchMainButton: {
+    backgroundColor: '#171717',
+    paddingHorizontal: 22,
+    paddingVertical: 13,
+    borderRadius: 10,
+  },
+
+  clearSearchMainButtonText: {
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
