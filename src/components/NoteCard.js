@@ -21,6 +21,12 @@ const NoteCard = ({
     onPress,
     showOtherNotesDivider = false,
 }) => {
+    const title = getNoteTitle(note);
+    const date = formatNoteDate(getNoteDate(note));
+
+    const hasIndicators =
+        note?.isPinned || note?.isFavorite;
+
     return (
         <View>
             {showOtherNotesDivider && (
@@ -43,7 +49,7 @@ const NoteCard = ({
                 onPress={onPress}>
                 <View style={styles.noteTitleRow}>
                     <HighlightedText
-                        text={getNoteTitle(note)}
+                        text={title}
                         query={searchQuery}
                         style={styles.noteTitle}
                         numberOfLines={1}
@@ -52,22 +58,29 @@ const NoteCard = ({
                         }
                     />
 
-                    <View style={styles.noteIndicators}>
-                        {note.isPinned && (
-                            <Text style={styles.pinIndicator}>
-                                📌
-                            </Text>
-                        )}
+                    {hasIndicators && (
+                        <View style={styles.noteIndicators}>
+                            {note.isPinned && (
+                                <Text
+                                    style={[
+                                        styles.pinIndicator,
+                                        styles.indicatorSpacing,
+                                    ]}>
+                                    📌
+                                </Text>
+                            )}
 
-                        {note.isFavorite && (
-                            <Text style={styles.favoriteStar}>
-                                ★
-                            </Text>
-                        )}
-                    </View>
+                            {note.isFavorite && (
+                                <Text
+                                    style={styles.favoriteStar}>
+                                    ★
+                                </Text>
+                            )}
+                        </View>
+                    )}
                 </View>
 
-                {note.content ? (
+                {note?.content ? (
                     <HighlightedText
                         text={note.content}
                         query={searchQuery}
@@ -83,9 +96,17 @@ const NoteCard = ({
                     </Text>
                 )}
 
-                <Text style={styles.noteDate}>
-                    {formatNoteDate(getNoteDate(note))}
-                </Text>
+                <View style={styles.noteFooter}>
+                    <Text style={styles.categoryText}>
+                        {note?.category ?? 'Personal'}
+                    </Text>
+
+                    {date ? (
+                        <Text style={styles.noteDate}>
+                            {date}
+                        </Text>
+                    ) : null}
+                </View>
             </Pressable>
         </View>
     );
@@ -145,7 +166,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginLeft: 8,
-        gap: 5,
+    },
+
+    indicatorSpacing: {
+        marginRight: 6,
     },
 
     pinIndicator: {
@@ -153,7 +177,7 @@ const styles = StyleSheet.create({
     },
 
     favoriteStar: {
-        fontSize: 17,
+        fontSize: 18,
         color: '#171717',
     },
 
@@ -176,9 +200,25 @@ const styles = StyleSheet.create({
     },
 
     noteDate: {
-        marginTop: 14,
         fontSize: 12,
         color: '#999',
+    },
+
+    noteFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 14,
+    },
+
+    categoryText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#666',
+        backgroundColor: '#F0F0EE',
+        paddingHorizontal: 9,
+        paddingVertical: 5,
+        borderRadius: 8,
     },
 });
 

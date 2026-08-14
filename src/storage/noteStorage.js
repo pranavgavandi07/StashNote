@@ -2,38 +2,60 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NOTES_STORAGE_KEY = '@stashnote_notes';
 
-/**
- * Creates a safe, consistent note object.
+/*
+ * Creates a safe and consistent note object.
  *
- * This also keeps older notes compatible if they
- * don't have isFavorite or isPinned yet.
+ * This keeps older notes compatible if they
+ * don't yet contain favorite, pinned,
+ * category, or updatedAt fields.
  */
 const normalizeNote = note => {
-    if (!note || typeof note !== 'object') {
+    if (
+        !note ||
+        typeof note !== 'object'
+    ) {
         return null;
     }
 
     return {
         ...note,
-        isFavorite: note.isFavorite ?? false,
-        isPinned: note.isPinned ?? false,
+
+        isFavorite:
+            note.isFavorite ?? false,
+
+        isPinned:
+            note.isPinned ?? false,
+
+        category:
+            note.category ?? 'Personal',
+
+        createdAt:
+            note.createdAt ??
+            new Date().toISOString(),
+
+        updatedAt:
+            note.updatedAt ??
+            note.createdAt ??
+            new Date().toISOString(),
     };
 };
 
-/**
+/*
  * Loads all notes from AsyncStorage.
  */
 export const getNotes = async () => {
     try {
-        const storedNotes = await AsyncStorage.getItem(
-            NOTES_STORAGE_KEY,
-        );
+        const storedNotes =
+            await AsyncStorage.getItem(
+                NOTES_STORAGE_KEY,
+            );
 
         if (!storedNotes) {
             return [];
         }
 
-        const parsedNotes = JSON.parse(storedNotes);
+        const parsedNotes =
+            JSON.parse(storedNotes);
 
         if (!Array.isArray(parsedNotes)) {
             return [];
@@ -52,7 +74,7 @@ export const getNotes = async () => {
     }
 };
 
-/**
+/*
  * Saves the complete notes array.
  */
 export const saveNotes = async notes => {
@@ -77,11 +99,12 @@ export const saveNotes = async notes => {
     }
 };
 
-/**
- * Adds a new note to the beginning of the list.
+/*
+ * Adds a new note.
  */
 export const addNote = async note => {
-    const existingNotes = await getNotes();
+    const existingNotes =
+        await getNotes();
 
     const newNote = normalizeNote(note);
 
@@ -101,90 +124,116 @@ export const addNote = async note => {
     return updatedNotes;
 };
 
-/**
- * Updates an existing note while preserving
- * favorite and pin state when not provided.
+/*
+ * Updates an existing note.
  */
 export const updateNote = async updatedNote => {
-    const existingNotes = await getNotes();
+    const existingNotes =
+        await getNotes();
 
-    const updatedNotes = existingNotes.map(note => {
-        if (note.id !== updatedNote?.id) {
-            return note;
-        }
+    const updatedNotes =
+        existingNotes.map(note => {
+            if (
+                note.id !== updatedNote?.id
+            ) {
+                return note;
+            }
 
-        return normalizeNote({
-            ...note,
-            ...updatedNote,
+            return normalizeNote({
+                ...note,
+                ...updatedNote,
 
-            isFavorite:
-                updatedNote.isFavorite ??
-                note.isFavorite,
+                isFavorite:
+                    updatedNote.isFavorite ??
+                    note.isFavorite,
 
-            isPinned:
-                updatedNote.isPinned ??
-                note.isPinned,
+                isPinned:
+                    updatedNote.isPinned ??
+                    note.isPinned,
+
+                category:
+                    updatedNote.category ??
+                    note.category,
+
+                createdAt:
+                    note.createdAt,
+
+                updatedAt:
+                    updatedNote.updatedAt ??
+                    new Date().toISOString(),
+            });
         });
-    });
 
     await saveNotes(updatedNotes);
 
     return updatedNotes;
 };
 
-/**
+/*
  * Toggles the favorite state of a note.
  */
 export const toggleFavorite = async noteId => {
-    const existingNotes = await getNotes();
+    const existingNotes =
+        await getNotes();
 
-    const updatedNotes = existingNotes.map(note => {
-        if (note.id !== noteId) {
-            return note;
-        }
+    const updatedNotes =
+        existingNotes.map(note => {
+            if (note.id !== noteId) {
+                return note;
+            }
 
-        return {
-            ...note,
-            isFavorite: !note.isFavorite,
-        };
-    });
+            return {
+                ...note,
+                isFavorite:
+                    !note.isFavorite,
+                updatedAt:
+                    new Date().toISOString(),
+            };
+        });
 
     await saveNotes(updatedNotes);
 
     return updatedNotes;
 };
 
-/**
+/*
  * Toggles the pinned state of a note.
  */
 export const togglePinned = async noteId => {
-    const existingNotes = await getNotes();
+    const existingNotes =
+        await getNotes();
 
-    const updatedNotes = existingNotes.map(note => {
-        if (note.id !== noteId) {
-            return note;
-        }
+    const updatedNotes =
+        existingNotes.map(note => {
+            if (note.id !== noteId) {
+                return note;
+            }
 
-        return {
-            ...note,
-            isPinned: !note.isPinned,
-        };
-    });
+            return {
+                ...note,
+                isPinned:
+                    !note.isPinned,
+                updatedAt:
+                    new Date().toISOString(),
+            };
+        });
 
     await saveNotes(updatedNotes);
 
     return updatedNotes;
 };
 
-/**
+/*
  * Deletes a note by ID.
  */
 export const deleteNote = async noteId => {
-    const existingNotes = await getNotes();
+    const existingNotes =
+        await getNotes();
 
-    const updatedNotes = existingNotes.filter(
-        note => note.id !== noteId,
-    );
+    const updatedNotes =
+        existingNotes.filter(
+            note => note.id !== noteId,
+        );
 
     await saveNotes(updatedNotes);
 

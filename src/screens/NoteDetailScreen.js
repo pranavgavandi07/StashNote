@@ -69,7 +69,9 @@ const NoteDetailScreen = ({ route, navigation }) => {
         try {
             setIsUpdatingFavorite(true);
 
-            const updatedNotes = await toggleFavorite(note.id);
+            const updatedNotes = await toggleFavorite(
+                note.id,
+            );
 
             const updatedNote = updatedNotes.find(
                 item => item.id === note.id,
@@ -103,7 +105,9 @@ const NoteDetailScreen = ({ route, navigation }) => {
         try {
             setIsUpdatingPinned(true);
 
-            const updatedNotes = await togglePinned(note.id);
+            const updatedNotes = await togglePinned(
+                note.id,
+            );
 
             const updatedNote = updatedNotes.find(
                 item => item.id === note.id,
@@ -243,8 +247,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                         </Text>
 
                         {isPinned && (
-                            <Text
-                                style={styles.titlePin}>
+                            <Text style={styles.titlePin}>
                                 📌
                             </Text>
                         )}
@@ -259,12 +262,20 @@ const NoteDetailScreen = ({ route, navigation }) => {
                         )}
                     </View>
 
-                    <Text style={styles.date}>
-                        {formatDate(
-                            note.updatedAt ||
-                            note.createdAt,
-                        )}
-                    </Text>
+                    <View style={styles.noteMeta}>
+                        <View style={styles.categoryBadge}>
+                            <Text style={styles.categoryText}>
+                                {note.category || 'Personal'}
+                            </Text>
+                        </View>
+
+                        <Text style={styles.date}>
+                            {formatDate(
+                                note.updatedAt ||
+                                note.createdAt,
+                            )}
+                        </Text>
+                    </View>
                 </View>
 
                 <View style={styles.divider} />
@@ -280,10 +291,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                             pressed && styles.pressed,
                         ]}
                         onPress={handleEdit}>
-                        <Text
-                            style={
-                                styles.editButtonText
-                            }>
+                        <Text style={styles.editButtonText}>
                             Edit Note
                         </Text>
                     </Pressable>
@@ -295,9 +303,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                         ]}
                         onPress={handleDelete}>
                         <Text
-                            style={
-                                styles.deleteButtonText
-                            }>
+                            style={styles.deleteButtonText}>
                             Delete Note
                         </Text>
                     </Pressable>
@@ -441,8 +447,27 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
 
+    noteMeta: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 12,
+    },
+
+    categoryBadge: {
+        backgroundColor: '#EAEAE7',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+
+    categoryText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#555',
+    },
+
     date: {
-        marginTop: 10,
         fontSize: 13,
         color: '#999',
     },

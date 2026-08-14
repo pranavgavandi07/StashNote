@@ -7,6 +7,7 @@ import React, {
 import {
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -20,6 +21,7 @@ import { getNotes } from '../storage/noteStorage';
 import NoteCard from '../components/NoteCard';
 
 import {
+  CATEGORIES,
   SORT_OPTIONS,
   getDisplayedNotes,
   getResultLabel,
@@ -28,12 +30,12 @@ import {
 
 const HomeScreen = ({ navigation }) => {
   const [notes, setNotes] = useState([]);
-
   const [searchQuery, setSearchQuery] =
     useState('');
-
   const [showFavorites, setShowFavorites] =
     useState(false);
+  const [selectedCategory, setSelectedCategory] =
+    useState('All');
 
   const [sortOption, setSortOption] = useState(
     SORT_OPTIONS.RECENTLY_UPDATED,
@@ -43,8 +45,22 @@ const HomeScreen = ({ navigation }) => {
     useState(false);
 
   const loadNotes = async () => {
-    const storedNotes = await getNotes();
-    setNotes(storedNotes);
+    try {
+      const storedNotes = await getNotes();
+
+      setNotes(
+        Array.isArray(storedNotes)
+          ? storedNotes
+          : [],
+      );
+    } catch (error) {
+      console.error(
+        'Failed to load notes:',
+        error,
+      );
+
+      setNotes([]);
+    }
   };
 
   useFocusEffect(
@@ -57,12 +73,14 @@ const HomeScreen = ({ navigation }) => {
     return getDisplayedNotes(notes, {
       searchQuery,
       showFavorites,
+      selectedCategory,
       sortOption,
     });
   }, [
     notes,
     searchQuery,
     showFavorites,
+    selectedCategory,
     sortOption,
   ]);
 
@@ -85,6 +103,13 @@ const HomeScreen = ({ navigation }) => {
         'favorite',
         'favorites',
       );
+    }
+
+    if (selectedCategory !== 'All') {
+      return `${displayedNotes.length} ${selectedCategory.toLowerCase()} ${displayedNotes.length === 1
+          ? 'note'
+          : 'notes'
+        }`;
     }
 
     return getResultLabel(
@@ -114,6 +139,7 @@ const HomeScreen = ({ navigation }) => {
 
     const showOtherNotesDivider =
       !showFavorites &&
+      selectedCategory === 'All' &&
       !item.isPinned &&
       index > 0 &&
       previousNote?.isPinned;
@@ -125,7 +151,9 @@ const HomeScreen = ({ navigation }) => {
         showOtherNotesDivider={
           showOtherNotesDivider
         }
-        onPress={() => handleOpenNote(item)}
+        onPress={() =>
+          handleOpenNote(item)
+        }
       />
     );
   };
@@ -134,7 +162,8 @@ const HomeScreen = ({ navigation }) => {
     value,
     label,
   ) => {
-    const isActive = sortOption === value;
+    const isActive =
+      sortOption === value;
 
     return (
       <Pressable
@@ -172,7 +201,10 @@ const HomeScreen = ({ navigation }) => {
       return (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
-            <Text style={styles.emptyIconText}>
+            <Text
+              style={
+                styles.emptyIconText
+              }>
               +
             </Text>
           </View>
@@ -193,7 +225,10 @@ const HomeScreen = ({ navigation }) => {
               styles.buttonPressed,
             ]}
             onPress={handleCreateNote}>
-            <Text style={styles.emptyButtonText}>
+            <Text
+              style={
+                styles.emptyButtonText
+              }>
               Create a Note
             </Text>
           </Pressable>
@@ -201,27 +236,54 @@ const HomeScreen = ({ navigation }) => {
       );
     }
 
+    let noResultsTitle =
+      'No notes found';
+
+    let noResultsText =
+      `We couldn't find any notes matching "${searchQuery}".`;
+
+    if (
+      selectedCategory !== 'All' &&
+      !hasSearchQuery &&
+      !showFavorites
+    ) {
+      noResultsTitle =
+        `No ${selectedCategory.toLowerCase()} notes`;
+
+      noResultsText =
+        `You don't have any notes in the ${selectedCategory} category yet.`;
+    }
+
+    if (showFavorites) {
+      noResultsTitle =
+        'No favorite notes';
+
+      noResultsText = hasSearchQuery
+        ? `No favorite notes match "${searchQuery}".`
+        : selectedCategory !== 'All'
+          ? `No favorite notes in the ${selectedCategory} category.`
+          : 'Mark a note as favorite to find it here.';
+    }
+
     return (
       <View style={styles.noResultsState}>
         <View style={styles.noResultsIcon}>
           <Text
-            style={styles.noResultsIconText}>
-            {showFavorites ? '★' : '⌕'}
+            style={
+              styles.noResultsIconText
+            }>
+            {showFavorites
+              ? '★'
+              : '⌕'}
           </Text>
         </View>
 
         <Text style={styles.noResultsTitle}>
-          {showFavorites
-            ? 'No favorite notes'
-            : 'No notes found'}
+          {noResultsTitle}
         </Text>
 
         <Text style={styles.noResultsText}>
-          {showFavorites
-            ? hasSearchQuery
-              ? `No favorite notes match "${searchQuery}".`
-              : 'Mark a note as favorite to find it here.'
-            : `We couldn't find any notes matching "${searchQuery}".`}
+          {noResultsText}
         </Text>
 
         <Pressable
@@ -233,9 +295,15 @@ const HomeScreen = ({ navigation }) => {
           onPress={() => {
             if (hasSearchQuery) {
               handleClearSearch();
-            } else {
-              setShowFavorites(false);
+              return;
             }
+
+            if (showFavorites) {
+              setShowFavorites(false);
+              return;
+            }
+
+            setSelectedCategory('All');
           }}>
           <Text
             style={
@@ -270,7 +338,10 @@ const HomeScreen = ({ navigation }) => {
             styles.buttonPressed,
           ]}
           onPress={handleCreateNote}>
-          <Text style={styles.headerAddText}>
+          <Text
+            style={
+              styles.headerAddText
+            }>
             +
           </Text>
         </Pressable>
@@ -279,7 +350,10 @@ const HomeScreen = ({ navigation }) => {
       {notes.length > 0 && (
         <>
           {/* SEARCH */}
-          <View style={styles.searchContainer}>
+          <View
+            style={
+              styles.searchContainer
+            }>
             <Text style={styles.searchIcon}>
               ⌕
             </Text>
@@ -289,7 +363,9 @@ const HomeScreen = ({ navigation }) => {
               placeholder="Search notes..."
               placeholderTextColor="#999"
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={
+                setSearchQuery
+              }
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="search"
@@ -302,18 +378,25 @@ const HomeScreen = ({ navigation }) => {
                   pressed &&
                   styles.buttonPressed,
                 ]}
-                onPress={handleClearSearch}>
+                onPress={
+                  handleClearSearch
+                }>
                 <Text
-                  style={styles.clearSearchText}>
+                  style={
+                    styles.clearSearchText
+                  }>
                   ×
                 </Text>
               </Pressable>
             )}
           </View>
 
-          {/* FILTERS */}
+          {/* FAVORITES AND SORT */}
           <View style={styles.filterRow}>
-            <View style={styles.filterContainer}>
+            <View
+              style={
+                styles.filterContainer
+              }>
               <Pressable
                 style={({ pressed }) => [
                   styles.filterButton,
@@ -365,7 +448,8 @@ const HomeScreen = ({ navigation }) => {
               ]}
               onPress={() =>
                 setShowSortOptions(
-                  previous => !previous,
+                  previous =>
+                    !previous,
                 )
               }>
               <Text style={styles.sortIcon}>
@@ -374,10 +458,71 @@ const HomeScreen = ({ navigation }) => {
             </Pressable>
           </View>
 
+          {/* CATEGORY FILTER */}
+          <View
+            style={
+              styles.categorySection
+            }>
+            <Text
+              style={
+                styles.categoryLabel
+              }>
+              Categories
+            </Text>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={
+                false
+              }
+              contentContainerStyle={
+                styles.categoryList
+              }>
+              {CATEGORIES.map(
+                category => {
+                  const isActive =
+                    selectedCategory ===
+                    category;
+
+                  return (
+                    <Pressable
+                      key={category}
+                      style={({
+                        pressed,
+                      }) => [
+                          styles.categoryButton,
+                          isActive &&
+                          styles.categoryButtonActive,
+                          pressed &&
+                          styles.buttonPressed,
+                        ]}
+                      onPress={() =>
+                        setSelectedCategory(
+                          category,
+                        )
+                      }>
+                      <Text
+                        style={[
+                          styles.categoryButtonText,
+                          isActive &&
+                          styles.categoryButtonTextActive,
+                        ]}>
+                        {category}
+                      </Text>
+                    </Pressable>
+                  );
+                },
+              )}
+            </ScrollView>
+          </View>
+
           {/* SORT MENU */}
           {showSortOptions && (
             <View style={styles.sortMenu}>
-              <Text style={styles.sortMenuTitle}>
+              <Text
+                style={
+                  styles.sortMenuTitle
+                }>
                 Sort Notes
               </Text>
 
@@ -403,9 +548,17 @@ const HomeScreen = ({ navigation }) => {
             </View>
           )}
 
-          <View style={styles.currentSortRow}>
-            <Text style={styles.currentSortText}>
-              {getSortLabel(sortOption)}
+          <View
+            style={
+              styles.currentSortRow
+            }>
+            <Text
+              style={
+                styles.currentSortText
+              }>
+              {getSortLabel(
+                sortOption,
+              )}
             </Text>
           </View>
         </>
@@ -416,9 +569,13 @@ const HomeScreen = ({ navigation }) => {
       ) : (
         <FlatList
           data={displayedNotes}
-          keyExtractor={item => item.id}
+          keyExtractor={item =>
+            item.id
+          }
           renderItem={renderNote}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={
+            false
+          }
           contentContainerStyle={
             styles.list
           }
@@ -435,7 +592,9 @@ const HomeScreen = ({ navigation }) => {
           ]}
           onPress={handleCreateNote}>
           <Text
-            style={styles.floatingButtonText}>
+            style={
+              styles.floatingButtonText
+            }>
             +
           </Text>
         </Pressable>
@@ -533,7 +692,7 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 14,
   },
 
   filterContainer: {
@@ -581,6 +740,46 @@ const styles = StyleSheet.create({
   sortIcon: {
     fontSize: 22,
     color: '#333',
+  },
+
+  categorySection: {
+    marginBottom: 12,
+  },
+
+  categoryLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#777',
+    marginBottom: 8,
+  },
+
+  categoryList: {
+    paddingRight: 8,
+  },
+
+  categoryButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E8E8E5',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 9,
+    marginRight: 8,
+  },
+
+  categoryButtonActive: {
+    backgroundColor: '#171717',
+    borderColor: '#171717',
+  },
+
+  categoryButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+  },
+
+  categoryButtonTextActive: {
+    color: '#fff',
   },
 
   sortMenu: {
@@ -779,7 +978,11 @@ const styles = StyleSheet.create({
 
   floatingButtonPressed: {
     opacity: 0.75,
-    transform: [{ scale: 0.95 }],
+    transform: [
+      {
+        scale: 0.95,
+      },
+    ],
   },
 
   floatingButtonText: {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import {
     Alert,
     KeyboardAvoidingView,
@@ -10,7 +11,13 @@ import {
     TextInput,
     View,
 } from 'react-native';
+
 import { updateNote } from '../storage/noteStorage';
+
+import {
+    getNoteCategory,
+    NOTE_CATEGORIES,
+} from '../utils/noteHelpers';
 
 const TITLE_MAX_LENGTH = 100;
 const CONTENT_MAX_LENGTH = 10000;
@@ -18,13 +25,28 @@ const CONTENT_MAX_LENGTH = 10000;
 const EditNoteScreen = ({ route, navigation }) => {
     const { note } = route.params;
 
-    const [title, setTitle] = useState(note.title || '');
-    const [content, setContent] = useState(note.content || '');
-    const [isSaving, setIsSaving] = useState(false);
+    const [title, setTitle] = useState(
+        note.title || '',
+    );
+
+    const [content, setContent] = useState(
+        note.content || '',
+    );
+
+    const [category, setCategory] = useState(
+        getNoteCategory(note),
+    );
+
+    const [isSaving, setIsSaving] =
+        useState(false);
+
+    const originalCategory =
+        getNoteCategory(note);
 
     const hasUnsavedChanges =
         title !== (note.title || '') ||
-        content !== (note.content || '');
+        content !== (note.content || '') ||
+        category !== originalCategory;
 
     const handleBack = () => {
         if (!hasUnsavedChanges) {
@@ -43,18 +65,24 @@ const EditNoteScreen = ({ route, navigation }) => {
                 {
                     text: 'Discard',
                     style: 'destructive',
-                    onPress: () => navigation.goBack(),
+                    onPress: () =>
+                        navigation.goBack(),
                 },
             ],
         );
     };
 
     const handleSave = async () => {
-        if (!title.trim() && !content.trim()) {
+        const trimmedTitle = title.trim();
+
+        const trimmedContent = content.trim();
+
+        if (!trimmedTitle && !trimmedContent) {
             Alert.alert(
                 'Empty note',
                 'Please enter a title or some content.',
             );
+
             return;
         }
 
@@ -63,9 +91,21 @@ const EditNoteScreen = ({ route, navigation }) => {
 
             const updatedNote = {
                 ...note,
-                title: title.trim(),
-                content: content.trim(),
-                updatedAt: new Date().toISOString(),
+
+                title: trimmedTitle,
+
+                content: trimmedContent,
+
+                category,
+
+                updatedAt:
+                    new Date().toISOString(),
+
+                isFavorite:
+                    note.isFavorite ?? false,
+
+                isPinned:
+                    note.isPinned ?? false,
             };
 
             await updateNote(updatedNote);
@@ -74,6 +114,11 @@ const EditNoteScreen = ({ route, navigation }) => {
                 note: updatedNote,
             });
         } catch (error) {
+            console.error(
+                'Failed to update note:',
+                error,
+            );
+
             Alert.alert(
                 'Unable to save',
                 'Something went wrong while updating your note.',
@@ -86,7 +131,12 @@ const EditNoteScreen = ({ route, navigation }) => {
     return (
         <KeyboardAvoidingView
             style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            behavior={
+                Platform.OS === 'ios'
+                    ? 'padding'
+                    : undefined
+            }>
+            {/* TOP BAR */}
             <View style={styles.topBar}>
                 <Pressable
                     style={({ pressed }) => [
@@ -94,10 +144,14 @@ const EditNoteScreen = ({ route, navigation }) => {
                         pressed && styles.pressed,
                     ]}
                     onPress={handleBack}>
-                    <Text style={styles.backText}>‹</Text>
+                    <Text style={styles.backText}>
+                        ‹
+                    </Text>
                 </Pressable>
 
-                <Text style={styles.screenLabel}>Edit Note</Text>
+                <Text style={styles.screenLabel}>
+                    Edit Note
+                </Text>
 
                 <View style={styles.topBarSpacer} />
             </View>
@@ -106,9 +160,14 @@ const EditNoteScreen = ({ route, navigation }) => {
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode={
-                    Platform.OS === 'ios' ? 'interactive' : 'on-drag'
+                    Platform.OS === 'ios'
+                        ? 'interactive'
+                        : 'on-drag'
                 }
-                contentContainerStyle={styles.content}>
+                contentContainerStyle={
+                    styles.content
+                }>
+                {/* TITLE */}
                 <View style={styles.inputHeader}>
                     <TextInput
                         style={styles.titleInput}
@@ -120,11 +179,14 @@ const EditNoteScreen = ({ route, navigation }) => {
                         maxLength={TITLE_MAX_LENGTH}
                     />
 
-                    <Text style={styles.characterCount}>
-                        {title.length}/{TITLE_MAX_LENGTH}
+                    <Text
+                        style={styles.characterCount}>
+                        {title.length}/
+                        {TITLE_MAX_LENGTH}
                     </Text>
                 </View>
 
+                {/* CONTENT */}
                 <View style={styles.inputHeader}>
                     <TextInput
                         style={styles.contentInput}
@@ -137,21 +199,74 @@ const EditNoteScreen = ({ route, navigation }) => {
                         maxLength={CONTENT_MAX_LENGTH}
                     />
 
-                    <Text style={styles.characterCount}>
-                        {content.length}/{CONTENT_MAX_LENGTH}
+                    <Text
+                        style={styles.characterCount}>
+                        {content.length}/
+                        {CONTENT_MAX_LENGTH}
                     </Text>
                 </View>
 
+                {/* CATEGORY */}
+                <View style={styles.categorySection}>
+                    <Text style={styles.categoryLabel}>
+                        Category
+                    </Text>
+
+                    <View style={styles.categoryList}>
+                        {NOTE_CATEGORIES.map(
+                            item => {
+                                const isSelected =
+                                    category === item;
+
+                                return (
+                                    <Pressable
+                                        key={item}
+                                        style={({
+                                            pressed,
+                                        }) => [
+                                                styles.categoryButton,
+
+                                                isSelected &&
+                                                styles.categoryButtonActive,
+
+                                                pressed &&
+                                                styles.categoryButtonPressed,
+                                            ]}
+                                        onPress={() =>
+                                            setCategory(
+                                                item,
+                                            )
+                                        }>
+                                        <Text
+                                            style={[
+                                                styles.categoryButtonText,
+
+                                                isSelected &&
+                                                styles.categoryButtonTextActive,
+                                            ]}>
+                                            {item}
+                                        </Text>
+                                    </Pressable>
+                                );
+                            },
+                        )}
+                    </View>
+                </View>
+
+                {/* SAVE BUTTON */}
                 <Pressable
                     style={({ pressed }) => [
                         styles.saveButton,
                         pressed && styles.pressed,
-                        isSaving && styles.saveButtonDisabled,
+                        isSaving &&
+                        styles.saveButtonDisabled,
                     ]}
                     onPress={handleSave}
                     disabled={isSaving}>
                     <Text style={styles.saveButtonText}>
-                        {isSaving ? 'Saving...' : 'Save Changes'}
+                        {isSaving
+                            ? 'Saving...'
+                            : 'Save Changes'}
                     </Text>
                 </Pressable>
             </ScrollView>
@@ -221,6 +336,53 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: '700',
         color: '#171717',
+    },
+
+    categorySection: {
+        marginBottom: 20,
+    },
+
+    categoryLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#777',
+        marginBottom: 10,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+
+    categoryList: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+
+    categoryButton: {
+        paddingHorizontal: 14,
+        paddingVertical: 9,
+        borderRadius: 20,
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#E8E8E5',
+    },
+
+    categoryButtonActive: {
+        backgroundColor: '#171717',
+        borderColor: '#171717',
+    },
+
+    categoryButtonPressed: {
+        opacity: 0.7,
+    },
+
+    categoryButtonText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#666',
+    },
+
+    categoryButtonTextActive: {
+        color: '#fff',
     },
 
     contentInput: {

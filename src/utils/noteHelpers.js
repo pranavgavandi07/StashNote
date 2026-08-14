@@ -1,3 +1,15 @@
+export const NOTE_CATEGORIES = [
+    'Personal',
+    'Work',
+    'Important',
+    'Ideas',
+];
+
+export const CATEGORIES = [
+    'All',
+    ...NOTE_CATEGORIES,
+];
+
 export const SORT_OPTIONS = {
     RECENTLY_UPDATED: 'recentlyUpdated',
     RECENTLY_CREATED: 'recentlyCreated',
@@ -5,12 +17,34 @@ export const SORT_OPTIONS = {
     REVERSE_ALPHABETICAL: 'reverseAlphabetical',
 };
 
+/*
+ * Returns a safe display title for a note.
+ */
 export const getNoteTitle = note =>
     note?.title?.trim() || 'Untitled Note';
 
+/*
+ * Returns the best available date for a note.
+ */
 export const getNoteDate = note =>
     note?.updatedAt || note?.createdAt || null;
 
+/*
+ * Returns a safe category for a note.
+ */
+export const getNoteCategory = note => {
+    const category = note?.category;
+
+    if (NOTE_CATEGORIES.includes(category)) {
+        return category;
+    }
+
+    return 'Personal';
+};
+
+/*
+ * Formats a note date for display.
+ */
 export const formatNoteDate = dateString => {
     if (!dateString) {
         return '';
@@ -28,15 +62,32 @@ export const formatNoteDate = dateString => {
     });
 };
 
-export const matchesSearch = (note, searchQuery) => {
-    const query = searchQuery.trim().toLowerCase();
+/*
+ * Checks whether a note matches the search query.
+ *
+ * Search works across:
+ * - title
+ * - content
+ */
+export const matchesSearch = (
+    note,
+    searchQuery,
+) => {
+    const query = searchQuery
+        .trim()
+        .toLowerCase();
 
     if (!query) {
         return true;
     }
 
-    const title = (note?.title || '').toLowerCase();
-    const content = (note?.content || '').toLowerCase();
+    const title = (
+        note?.title || ''
+    ).toLowerCase();
+
+    const content = (
+        note?.content || ''
+    ).toLowerCase();
 
     return (
         title.includes(query) ||
@@ -44,30 +95,72 @@ export const matchesSearch = (note, searchQuery) => {
     );
 };
 
+/*
+ * Filters notes by:
+ * - search query
+ * - favorites
+ * - category
+ */
 export const filterNotes = (
     notes,
-    { searchQuery = '', showFavorites = false } = {},
+    {
+        searchQuery = '',
+        showFavorites = false,
+        selectedCategory = 'All',
+    } = {},
 ) => {
     return notes.filter(note => {
-        if (showFavorites && !note.isFavorite) {
+        if (
+            showFavorites &&
+            !note.isFavorite
+        ) {
             return false;
         }
 
-        return matchesSearch(note, searchQuery);
+        if (
+            selectedCategory !== 'All' &&
+            getNoteCategory(note) !==
+            selectedCategory
+        ) {
+            return false;
+        }
+
+        return matchesSearch(
+            note,
+            searchQuery,
+        );
     });
 };
 
+/*
+ * Safely compares two dates.
+ *
+ * Newer dates come first.
+ */
 const compareDatesDescending = (
     firstDate,
     secondDate,
 ) => {
-    const first = new Date(firstDate || 0).getTime();
-    const second = new Date(secondDate || 0).getTime();
+    const first = new Date(
+        firstDate || 0,
+    ).getTime();
+
+    const second = new Date(
+        secondDate || 0,
+    ).getTime();
 
     return second - first;
 };
 
-const compareTitlesAscending = (first, second) => {
+/*
+ * Alphabetical comparison.
+ *
+ * Case-insensitive.
+ */
+const compareTitlesAscending = (
+    first,
+    second,
+) => {
     return getNoteTitle(first).localeCompare(
         getNoteTitle(second),
         undefined,
@@ -77,7 +170,13 @@ const compareTitlesAscending = (first, second) => {
     );
 };
 
-const compareTitlesDescending = (first, second) => {
+/*
+ * Reverse alphabetical comparison.
+ */
+const compareTitlesDescending = (
+    first,
+    second,
+) => {
     return getNoteTitle(second).localeCompare(
         getNoteTitle(first),
         undefined,
@@ -87,6 +186,10 @@ const compareTitlesDescending = (first, second) => {
     );
 };
 
+/*
+ * Sorts notes according to the selected
+ * sort option.
+ */
 export const sortNotes = (
     notes,
     sortOption = SORT_OPTIONS.RECENTLY_UPDATED,
@@ -95,11 +198,12 @@ export const sortNotes = (
 
     switch (sortOption) {
         case SORT_OPTIONS.RECENTLY_CREATED:
-            return sortedNotes.sort((a, b) =>
-                compareDatesDescending(
-                    a.createdAt,
-                    b.createdAt,
-                ),
+            return sortedNotes.sort(
+                (a, b) =>
+                    compareDatesDescending(
+                        a.createdAt,
+                        b.createdAt,
+                    ),
             );
 
         case SORT_OPTIONS.ALPHABETICAL:
@@ -114,15 +218,21 @@ export const sortNotes = (
 
         case SORT_OPTIONS.RECENTLY_UPDATED:
         default:
-            return sortedNotes.sort((a, b) =>
-                compareDatesDescending(
-                    a.updatedAt || a.createdAt,
-                    b.updatedAt || b.createdAt,
-                ),
+            return sortedNotes.sort(
+                (a, b) =>
+                    compareDatesDescending(
+                        a.updatedAt ||
+                        a.createdAt,
+                        b.updatedAt ||
+                        b.createdAt,
+                    ),
             );
     }
 };
 
+/*
+ * Moves pinned notes before unpinned notes.
+ */
 export const applyPinPriority = notes => {
     const pinnedNotes = notes.filter(
         note => note.isPinned,
@@ -132,35 +242,78 @@ export const applyPinPriority = notes => {
         note => !note.isPinned,
     );
 
-    return [...pinnedNotes, ...unpinnedNotes];
+    return [
+        ...pinnedNotes,
+        ...unpinnedNotes,
+    ];
 };
 
+/*
+ * Determines the final list shown
+ * on HomeScreen.
+ *
+ * Processing order:
+ *
+ * 1. Favorites filter
+ * 2. Category filter
+ * 3. Search filter
+ * 4. Sort
+ * 5. Pin priority
+ */
 export const getDisplayedNotes = (
     notes,
     {
         searchQuery = '',
         showFavorites = false,
-        sortOption = SORT_OPTIONS.RECENTLY_UPDATED,
+        selectedCategory = 'All',
+        sortOption =
+        SORT_OPTIONS.RECENTLY_UPDATED,
     } = {},
 ) => {
-    const filteredNotes = filterNotes(notes, {
-        searchQuery,
-        showFavorites,
-    });
+    const filteredNotes = filterNotes(
+        notes,
+        {
+            searchQuery,
+            showFavorites,
+            selectedCategory,
+        },
+    );
 
     const sortedNotes = sortNotes(
         filteredNotes,
         sortOption,
     );
 
-    // Pin priority exists only in All Notes.
-    if (showFavorites) {
-        return sortedNotes;
+    const isAlphabeticalSort =
+        sortOption ===
+        SORT_OPTIONS.ALPHABETICAL ||
+        sortOption ===
+        SORT_OPTIONS.REVERSE_ALPHABETICAL;
+
+    /*
+     * Pinned notes get priority for normal
+     * chronological views.
+     *
+     * Alphabetical sorting remains purely
+     * alphabetical.
+     */
+    if (
+        !isAlphabeticalSort &&
+        !showFavorites &&
+        selectedCategory === 'All'
+    ) {
+        return applyPinPriority(
+            sortedNotes,
+        );
     }
 
-    return applyPinPriority(sortedNotes);
+    return sortedNotes;
 };
 
+/*
+ * Returns the readable label for the
+ * current sorting option.
+ */
 export const getSortLabel = sortOption => {
     switch (sortOption) {
         case SORT_OPTIONS.RECENTLY_CREATED:
@@ -178,6 +331,9 @@ export const getSortLabel = sortOption => {
     }
 };
 
+/*
+ * Creates a simple result/count label.
+ */
 export const getResultLabel = (
     count,
     singular,
