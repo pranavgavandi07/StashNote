@@ -33,7 +33,8 @@ const AddNoteScreen = ({ navigation }) => {
 
     const hasUnsavedChanges =
         title.trim().length > 0 ||
-        content.trim().length > 0;
+        content.trim().length > 0 ||
+        category !== 'Personal';
 
     const handleBack = () => {
         if (!hasUnsavedChanges) {
