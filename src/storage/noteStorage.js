@@ -100,6 +100,26 @@ export const saveNotes = async notes => {
 };
 
 /*
+ * Finds a note by ID or throws an error.
+ */
+const getNoteIndex = (
+    notes,
+    noteId,
+) => {
+    const noteIndex = notes.findIndex(
+        note => note.id === noteId,
+    );
+
+    if (noteIndex === -1) {
+        throw new Error(
+            'Note not found.',
+        );
+    }
+
+    return noteIndex;
+};
+
+/*
  * Adds a new note.
  */
 export const addNote = async note => {
@@ -128,14 +148,23 @@ export const addNote = async note => {
  * Updates an existing note.
  */
 export const updateNote = async updatedNote => {
+    if (!updatedNote?.id) {
+        throw new Error(
+            'Cannot update a note without an ID.',
+        );
+    }
+
     const existingNotes =
         await getNotes();
 
+    getNoteIndex(
+        existingNotes,
+        updatedNote.id,
+    );
+
     const updatedNotes =
         existingNotes.map(note => {
-            if (
-                note.id !== updatedNote?.id
-            ) {
+            if (note.id !== updatedNote.id) {
                 return note;
             }
 
@@ -176,6 +205,11 @@ export const toggleFavorite = async noteId => {
     const existingNotes =
         await getNotes();
 
+    getNoteIndex(
+        existingNotes,
+        noteId,
+    );
+
     const updatedNotes =
         existingNotes.map(note => {
             if (note.id !== noteId) {
@@ -203,6 +237,11 @@ export const togglePinned = async noteId => {
     const existingNotes =
         await getNotes();
 
+    getNoteIndex(
+        existingNotes,
+        noteId,
+    );
+
     const updatedNotes =
         existingNotes.map(note => {
             if (note.id !== noteId) {
@@ -229,6 +268,11 @@ export const togglePinned = async noteId => {
 export const deleteNote = async noteId => {
     const existingNotes =
         await getNotes();
+
+    getNoteIndex(
+        existingNotes,
+        noteId,
+    );
 
     const updatedNotes =
         existingNotes.filter(
