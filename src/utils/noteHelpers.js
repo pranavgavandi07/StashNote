@@ -199,7 +199,11 @@ export const filterNotes = (
         selectedCategory = 'All',
     } = {},
 ) => {
-    return notes.filter(note => {
+    const safeNotes = Array.isArray(notes)
+        ? notes
+        : [];
+
+    return safeNotes.filter(note => {
         if (
             showFavorites &&
             !note.isFavorite
@@ -284,7 +288,11 @@ export const sortNotes = (
     notes,
     sortOption = SORT_OPTIONS.RECENTLY_UPDATED,
 ) => {
-    const sortedNotes = [...notes];
+    const safeNotes = Array.isArray(notes)
+        ? notes
+        : [];
+
+    const sortedNotes = [...safeNotes];
 
     switch (sortOption) {
         case SORT_OPTIONS.RECENTLY_CREATED:
@@ -324,11 +332,15 @@ export const sortNotes = (
  * Moves pinned notes before unpinned notes.
  */
 export const applyPinPriority = notes => {
-    const pinnedNotes = notes.filter(
+    const safeNotes = Array.isArray(notes)
+        ? notes
+        : [];
+
+    const pinnedNotes = safeNotes.filter(
         note => note.isPinned,
     );
 
-    const unpinnedNotes = notes.filter(
+    const unpinnedNotes = safeNotes.filter(
         note => !note.isPinned,
     );
 
