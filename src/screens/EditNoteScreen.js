@@ -135,8 +135,11 @@ const EditNoteScreen = ({ route, navigation }) => {
                     style={({ pressed }) => [
                         styles.backButton,
                         pressed && styles.pressed,
+                        isSaving &&
+                        styles.backButtonDisabled,
                     ]}
-                    onPress={handleBack}>
+                    onPress={handleBack}
+                    disabled={isSaving}>
                     <Text style={styles.backText}>
                         ‹
                     </Text>
@@ -275,6 +278,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderWidth: 1,
         borderColor: '#E8E8E5',
+    },
+
+    backButtonDisabled: {
+        opacity: 0.5,
     },
 
     backText: {
