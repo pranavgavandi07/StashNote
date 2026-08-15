@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import {
     Alert,
     Pressable,
@@ -13,6 +14,12 @@ import {
     toggleFavorite,
     togglePinned,
 } from '../storage/noteStorage';
+
+import {
+    getNoteCategory,
+    getNoteDate,
+    getNoteTitle,
+} from '../utils/noteHelpers';
 
 const NoteDetailScreen = ({ route, navigation }) => {
     const { note } = route.params;
@@ -31,7 +38,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
     const [isUpdatingPinned, setIsUpdatingPinned] =
         useState(false);
 
-    const formatDate = dateString => {
+    const formatFullDate = dateString => {
         if (!dateString) {
             return '';
         }
@@ -48,6 +55,19 @@ const NoteDetailScreen = ({ route, navigation }) => {
             year: 'numeric',
         });
     };
+
+    const getWordCount = text => {
+        const trimmedText = text?.trim();
+
+        if (!trimmedText) {
+            return 0;
+        }
+
+        return trimmedText.split(/\s+/).length;
+    };
+
+    const getCharacterCount = text =>
+        text?.length || 0;
 
     const getCurrentNote = () => ({
         ...note,
@@ -167,6 +187,30 @@ const NoteDetailScreen = ({ route, navigation }) => {
         );
     };
 
+    const title = getNoteTitle(note);
+    const category = getNoteCategory(note);
+    const content = note.content || '';
+
+    const wordCount = getWordCount(content);
+    const characterCount =
+        getCharacterCount(content);
+
+    const createdDate = formatFullDate(
+        note.createdAt,
+    );
+
+    const updatedDate = formatFullDate(
+        note.updatedAt,
+    );
+
+    const displayDate = formatFullDate(
+        getNoteDate(note),
+    );
+
+    const hasBeenUpdated =
+        note.updatedAt &&
+        note.updatedAt !== note.createdAt;
+
     return (
         <View style={styles.container}>
             <View style={styles.topBar}>
@@ -176,7 +220,9 @@ const NoteDetailScreen = ({ route, navigation }) => {
                         pressed && styles.pressed,
                     ]}
                     onPress={() => navigation.goBack()}>
-                    <Text style={styles.backText}>‹</Text>
+                    <Text style={styles.backText}>
+                        ‹
+                    </Text>
                 </Pressable>
 
                 <Text style={styles.screenLabel}>
@@ -193,12 +239,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                         ]}
                         onPress={handleTogglePinned}
                         disabled={isUpdatingPinned}>
-                        <Text
-                            style={[
-                                styles.pinIcon,
-                                isPinned &&
-                                styles.pinIconActive,
-                            ]}>
+                        <Text style={styles.pinIcon}>
                             📌
                         </Text>
                     </Pressable>
@@ -242,8 +283,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                 <View style={styles.noteHeader}>
                     <View style={styles.titleRow}>
                         <Text style={styles.title}>
-                            {note.title ||
-                                'Untitled Note'}
+                            {title}
                         </Text>
 
                         {isPinned && (
@@ -265,24 +305,104 @@ const NoteDetailScreen = ({ route, navigation }) => {
                     <View style={styles.noteMeta}>
                         <View style={styles.categoryBadge}>
                             <Text style={styles.categoryText}>
-                                {note.category || 'Personal'}
+                                {category}
                             </Text>
                         </View>
 
-                        <Text style={styles.date}>
-                            {formatDate(
-                                note.updatedAt ||
-                                note.createdAt,
-                            )}
-                        </Text>
+                        {displayDate ? (
+                            <Text style={styles.date}>
+                                {displayDate}
+                            </Text>
+                        ) : null}
                     </View>
                 </View>
 
                 <View style={styles.divider} />
 
                 <Text style={styles.noteContent}>
-                    {note.content || 'No content'}
+                    {content || 'No content'}
                 </Text>
+
+                <View style={styles.statisticsSection}>
+                    <Text style={styles.statisticsTitle}>
+                        Note Details
+                    </Text>
+
+                    <View style={styles.statisticsCard}>
+                        <View style={styles.statItem}>
+                            <Text style={styles.statValue}>
+                                {wordCount}
+                            </Text>
+
+                            <Text style={styles.statLabel}>
+                                {wordCount === 1
+                                    ? 'Word'
+                                    : 'Words'}
+                            </Text>
+                        </View>
+
+                        <View style={styles.statDivider} />
+
+                        <View style={styles.statItem}>
+                            <Text style={styles.statValue}>
+                                {characterCount}
+                            </Text>
+
+                            <Text style={styles.statLabel}>
+                                {characterCount === 1
+                                    ? 'Character'
+                                    : 'Characters'}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {(createdDate || hasBeenUpdated) && (
+                        <View style={styles.dateDetails}>
+                            {createdDate ? (
+                                <View
+                                    style={
+                                        styles.dateDetailRow
+                                    }>
+                                    <Text
+                                        style={
+                                            styles.dateDetailLabel
+                                        }>
+                                        Created
+                                    </Text>
+
+                                    <Text
+                                        style={
+                                            styles.dateDetailValue
+                                        }>
+                                        {createdDate}
+                                    </Text>
+                                </View>
+                            ) : null}
+
+                            {hasBeenUpdated &&
+                                updatedDate ? (
+                                <View
+                                    style={
+                                        styles.dateDetailRow
+                                    }>
+                                    <Text
+                                        style={
+                                            styles.dateDetailLabel
+                                        }>
+                                        Last updated
+                                    </Text>
+
+                                    <Text
+                                        style={
+                                            styles.dateDetailValue
+                                        }>
+                                        {updatedDate}
+                                    </Text>
+                                </View>
+                            ) : null}
+                        </View>
+                    )}
+                </View>
 
                 <View style={styles.actions}>
                     <Pressable
@@ -376,10 +496,6 @@ const styles = StyleSheet.create({
     pinIcon: {
         fontSize: 18,
         textAlign: 'center',
-    },
-
-    pinIconActive: {
-        opacity: 1,
     },
 
     favoriteIcon: {
@@ -481,6 +597,77 @@ const styles = StyleSheet.create({
     noteContent: {
         fontSize: 17,
         lineHeight: 28,
+        color: '#3F3F3F',
+    },
+
+    statisticsSection: {
+        marginTop: 34,
+    },
+
+    statisticsTitle: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#999',
+        textTransform: 'uppercase',
+        letterSpacing: 0.6,
+        marginBottom: 10,
+    },
+
+    statisticsCard: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#E8E8E5',
+        borderRadius: 14,
+        flexDirection: 'row',
+        paddingVertical: 16,
+    },
+
+    statItem: {
+        flex: 1,
+        alignItems: 'center',
+    },
+
+    statValue: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#171717',
+    },
+
+    statLabel: {
+        marginTop: 4,
+        fontSize: 12,
+        color: '#999',
+    },
+
+    statDivider: {
+        width: 1,
+        backgroundColor: '#E8E8E5',
+    },
+
+    dateDetails: {
+        marginTop: 12,
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#E8E8E5',
+        borderRadius: 14,
+        paddingHorizontal: 16,
+    },
+
+    dateDetailRow: {
+        minHeight: 48,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    dateDetailLabel: {
+        fontSize: 13,
+        color: '#777',
+    },
+
+    dateDetailValue: {
+        fontSize: 13,
+        fontWeight: '600',
         color: '#3F3F3F',
     },
 
