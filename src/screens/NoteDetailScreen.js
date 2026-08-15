@@ -56,19 +56,6 @@ const NoteDetailScreen = ({ route, navigation }) => {
         });
     };
 
-    const getWordCount = text => {
-        const trimmedText = text?.trim();
-
-        if (!trimmedText) {
-            return 0;
-        }
-
-        return trimmedText.split(/\s+/).length;
-    };
-
-    const getCharacterCount = text =>
-        text?.length || 0;
-
     const getCurrentNote = () => ({
         ...note,
         isFavorite,
@@ -191,10 +178,6 @@ const NoteDetailScreen = ({ route, navigation }) => {
     const category = getNoteCategory(note);
     const content = note.content || '';
 
-    const wordCount = getWordCount(content);
-    const characterCount =
-        getCharacterCount(content);
-
     const createdDate = formatFullDate(
         note.createdAt,
     );
@@ -206,10 +189,6 @@ const NoteDetailScreen = ({ route, navigation }) => {
     const displayDate = formatFullDate(
         getNoteDate(note),
     );
-
-    const hasBeenUpdated =
-        note.updatedAt &&
-        note.updatedAt !== note.createdAt;
 
     return (
         <View style={styles.container}>
@@ -269,8 +248,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                             pressed && styles.pressed,
                         ]}
                         onPress={handleEdit}>
-                        <Text
-                            style={styles.editTopButtonText}>
+                        <Text style={styles.editTopButtonText}>
                             Edit
                         </Text>
                     </Pressable>
@@ -293,10 +271,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                         )}
 
                         {isFavorite && (
-                            <Text
-                                style={
-                                    styles.titleFavorite
-                                }>
+                            <Text style={styles.titleFavorite}>
                                 ★
                             </Text>
                         )}
@@ -323,86 +298,39 @@ const NoteDetailScreen = ({ route, navigation }) => {
                     {content || 'No content'}
                 </Text>
 
-                <View style={styles.statisticsSection}>
-                    <Text style={styles.statisticsTitle}>
-                        Note Details
-                    </Text>
+                {(createdDate || updatedDate) && (
+                    <View style={styles.noteInfoSection}>
+                        <Text style={styles.noteInfoTitle}>
+                            Note Info
+                        </Text>
 
-                    <View style={styles.statisticsCard}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>
-                                {wordCount}
-                            </Text>
-
-                            <Text style={styles.statLabel}>
-                                {wordCount === 1
-                                    ? 'Word'
-                                    : 'Words'}
-                            </Text>
-                        </View>
-
-                        <View style={styles.statDivider} />
-
-                        <View style={styles.statItem}>
-                            <Text style={styles.statValue}>
-                                {characterCount}
-                            </Text>
-
-                            <Text style={styles.statLabel}>
-                                {characterCount === 1
-                                    ? 'Character'
-                                    : 'Characters'}
-                            </Text>
-                        </View>
-                    </View>
-
-                    {(createdDate || hasBeenUpdated) && (
-                        <View style={styles.dateDetails}>
+                        <View style={styles.noteInfoCard}>
                             {createdDate ? (
-                                <View
-                                    style={
-                                        styles.dateDetailRow
-                                    }>
-                                    <Text
-                                        style={
-                                            styles.dateDetailLabel
-                                        }>
+                                <View style={styles.infoRow}>
+                                    <Text style={styles.infoLabel}>
                                         Created
                                     </Text>
 
-                                    <Text
-                                        style={
-                                            styles.dateDetailValue
-                                        }>
+                                    <Text style={styles.infoValue}>
                                         {createdDate}
                                     </Text>
                                 </View>
                             ) : null}
 
-                            {hasBeenUpdated &&
-                                updatedDate ? (
-                                <View
-                                    style={
-                                        styles.dateDetailRow
-                                    }>
-                                    <Text
-                                        style={
-                                            styles.dateDetailLabel
-                                        }>
+                            {updatedDate ? (
+                                <View style={styles.infoRow}>
+                                    <Text style={styles.infoLabel}>
                                         Last updated
                                     </Text>
 
-                                    <Text
-                                        style={
-                                            styles.dateDetailValue
-                                        }>
+                                    <Text style={styles.infoValue}>
                                         {updatedDate}
                                     </Text>
                                 </View>
                             ) : null}
                         </View>
-                    )}
-                </View>
+                    </View>
+                )}
 
                 <View style={styles.actions}>
                     <Pressable
@@ -422,8 +350,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                             pressed && styles.pressed,
                         ]}
                         onPress={handleDelete}>
-                        <Text
-                            style={styles.deleteButtonText}>
+                        <Text style={styles.deleteButtonText}>
                             Delete Note
                         </Text>
                     </Pressable>
@@ -600,11 +527,11 @@ const styles = StyleSheet.create({
         color: '#3F3F3F',
     },
 
-    statisticsSection: {
+    noteInfoSection: {
         marginTop: 34,
     },
 
-    statisticsTitle: {
+    noteInfoTitle: {
         fontSize: 12,
         fontWeight: '700',
         color: '#999',
@@ -613,39 +540,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
 
-    statisticsCard: {
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#E8E8E5',
-        borderRadius: 14,
-        flexDirection: 'row',
-        paddingVertical: 16,
-    },
-
-    statItem: {
-        flex: 1,
-        alignItems: 'center',
-    },
-
-    statValue: {
-        fontSize: 20,
-        fontWeight: '800',
-        color: '#171717',
-    },
-
-    statLabel: {
-        marginTop: 4,
-        fontSize: 12,
-        color: '#999',
-    },
-
-    statDivider: {
-        width: 1,
-        backgroundColor: '#E8E8E5',
-    },
-
-    dateDetails: {
-        marginTop: 12,
+    noteInfoCard: {
         backgroundColor: '#fff',
         borderWidth: 1,
         borderColor: '#E8E8E5',
@@ -653,19 +548,19 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
 
-    dateDetailRow: {
-        minHeight: 48,
+    infoRow: {
+        minHeight: 50,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
 
-    dateDetailLabel: {
+    infoLabel: {
         fontSize: 13,
         color: '#777',
     },
 
-    dateDetailValue: {
+    infoValue: {
         fontSize: 13,
         fontWeight: '600',
         color: '#3F3F3F',
