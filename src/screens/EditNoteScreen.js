@@ -40,12 +40,18 @@ const EditNoteScreen = ({ route, navigation }) => {
     const [isSaving, setIsSaving] =
         useState(false);
 
+    const originalTitle =
+        (note.title || '').trim();
+
+    const originalContent =
+        (note.content || '').trim();
+
     const originalCategory =
         getNoteCategory(note);
 
     const hasUnsavedChanges =
-        title !== (note.title || '') ||
-        content !== (note.content || '') ||
+        title.trim() !== originalTitle ||
+        content.trim() !== originalContent ||
         category !== originalCategory;
 
     const handleBack = () => {
