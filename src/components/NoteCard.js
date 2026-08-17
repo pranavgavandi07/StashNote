@@ -11,6 +11,7 @@ import HighlightedText from './HighlightedText';
 
 import {
     formatNoteDate,
+    getNoteCategory,
     getNoteDate,
     getNoteTitle,
 } from '../utils/noteHelpers';
@@ -23,6 +24,7 @@ const NoteCard = ({
 }) => {
     const title = getNoteTitle(note);
     const date = formatNoteDate(getNoteDate(note));
+    const category = getNoteCategory(note);
 
     const hasIndicators =
         note?.isPinned || note?.isFavorite;
@@ -98,7 +100,7 @@ const NoteCard = ({
 
                 <View style={styles.noteFooter}>
                     <Text style={styles.categoryText}>
-                        {note?.category ?? 'Personal'}
+                        {category}
                     </Text>
 
                     {date ? (
