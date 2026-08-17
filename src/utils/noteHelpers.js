@@ -159,7 +159,9 @@ export const matchesSearch = (
     note,
     searchQuery,
 ) => {
-    const query = searchQuery
+    const query = String(
+        searchQuery ?? '',
+    )
         .trim()
         .toLowerCase();
 
