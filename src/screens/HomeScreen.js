@@ -201,10 +201,7 @@ const HomeScreen = ({ navigation }) => {
       return (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
-            <Text
-              style={
-                styles.emptyIconText
-              }>
+            <Text style={styles.emptyIconText}>
               +
             </Text>
           </View>
@@ -225,10 +222,7 @@ const HomeScreen = ({ navigation }) => {
               styles.buttonPressed,
             ]}
             onPress={handleCreateNote}>
-            <Text
-              style={
-                styles.emptyButtonText
-              }>
+            <Text style={styles.emptyButtonText}>
               Create a Note
             </Text>
           </Pressable>
@@ -267,16 +261,13 @@ const HomeScreen = ({ navigation }) => {
 
     return (
       <View style={styles.noResultsState}>
-        <View style={styles.noResultsIcon}>
-          <Text
-            style={
-              styles.noResultsIconText
-            }>
-            {showFavorites
-              ? '★'
-              : '⌕'}
-          </Text>
-        </View>
+        {showFavorites && (
+          <View style={styles.noResultsIcon}>
+            <Text style={styles.noResultsIconText}>
+              ★
+            </Text>
+          </View>
+        )}
 
         <Text style={styles.noResultsTitle}>
           {noResultsTitle}
@@ -335,10 +326,7 @@ const HomeScreen = ({ navigation }) => {
       {notes.length > 0 && (
         <>
           {/* SEARCH */}
-          <View
-            style={
-              styles.searchContainer
-            }>
+          <View style={styles.searchContainer}>
             <Text style={styles.searchIcon}>
               ⌕
             </Text>
@@ -361,13 +349,9 @@ const HomeScreen = ({ navigation }) => {
                   pressed &&
                   styles.buttonPressed,
                 ]}
-                onPress={
-                  handleClearSearch
-                }>
+                onPress={handleClearSearch}>
                 <Text
-                  style={
-                    styles.clearSearchText
-                  }>
+                  style={styles.clearSearchText}>
                   ×
                 </Text>
               </Pressable>
@@ -376,10 +360,7 @@ const HomeScreen = ({ navigation }) => {
 
           {/* FAVORITES AND SORT */}
           <View style={styles.filterRow}>
-            <View
-              style={
-                styles.filterContainer
-              }>
+            <View style={styles.filterContainer}>
               <Pressable
                 style={({ pressed }) => [
                   styles.filterButton,
@@ -441,70 +422,52 @@ const HomeScreen = ({ navigation }) => {
           </View>
 
           {/* CATEGORY FILTER */}
-          <View
-            style={
-              styles.categorySection
-            }>
-            <Text
-              style={
-                styles.categoryLabel
-              }>
+          <View style={styles.categorySection}>
+            <Text style={styles.categoryLabel}>
               Categories
             </Text>
 
             <ScrollView
               horizontal
-              showsHorizontalScrollIndicator={
-                false
-              }
+              showsHorizontalScrollIndicator={false}
               contentContainerStyle={
                 styles.categoryList
               }>
-              {CATEGORIES.map(
-                category => {
-                  const isActive =
-                    selectedCategory ===
-                    category;
+              {CATEGORIES.map(category => {
+                const isActive =
+                  selectedCategory === category;
 
-                  return (
-                    <Pressable
-                      key={category}
-                      style={({
-                        pressed,
-                      }) => [
-                          styles.categoryButton,
-                          isActive &&
-                          styles.categoryButtonActive,
-                          pressed &&
-                          styles.buttonPressed,
-                        ]}
-                      onPress={() =>
-                        setSelectedCategory(
-                          category,
-                        )
-                      }>
-                      <Text
-                        style={[
-                          styles.categoryButtonText,
-                          isActive &&
-                          styles.categoryButtonTextActive,
-                        ]}>
-                        {category}
-                      </Text>
-                    </Pressable>
-                  );
-                },
-              )}
+                return (
+                  <Pressable
+                    key={category}
+                    style={({ pressed }) => [
+                      styles.categoryButton,
+                      isActive &&
+                      styles.categoryButtonActive,
+                      pressed &&
+                      styles.buttonPressed,
+                    ]}
+                    onPress={() =>
+                      setSelectedCategory(category)
+                    }>
+                    <Text
+                      style={[
+                        styles.categoryButtonText,
+                        isActive &&
+                        styles.categoryButtonTextActive,
+                      ]}>
+                      {category}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </ScrollView>
           </View>
 
           {/* SORT MENU */}
           {showSortOptions && (
             <View style={styles.sortMenu}>
-              <Text
-                style={
-                  styles.sortMenuTitle
-                }>
+              <Text style={styles.sortMenuTitle}>
                 Sort Notes
               </Text>
 
@@ -530,17 +493,9 @@ const HomeScreen = ({ navigation }) => {
             </View>
           )}
 
-          <View
-            style={
-              styles.currentSortRow
-            }>
-            <Text
-              style={
-                styles.currentSortText
-              }>
-              {getSortLabel(
-                sortOption,
-              )}
+          <View style={styles.currentSortRow}>
+            <Text style={styles.currentSortText}>
+              {getSortLabel(sortOption)}
             </Text>
           </View>
         </>
@@ -553,12 +508,8 @@ const HomeScreen = ({ navigation }) => {
           data={displayedNotes}
           keyExtractor={item => item.id}
           renderItem={renderNote}
-          showsVerticalScrollIndicator={
-            false
-          }
-          contentContainerStyle={
-            styles.list
-          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.list}
           keyboardShouldPersistTaps="handled"
         />
       )}
@@ -571,10 +522,7 @@ const HomeScreen = ({ navigation }) => {
             styles.floatingButtonPressed,
           ]}
           onPress={handleCreateNote}>
-          <Text
-            style={
-              styles.floatingButtonText
-            }>
+          <Text style={styles.floatingButtonText}>
             +
           </Text>
         </Pressable>
@@ -865,9 +813,11 @@ const styles = StyleSheet.create({
 
   noResultsState: {
     flex: 1,
+    minHeight: 0,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     paddingHorizontal: 30,
+    paddingTop: 20,
     paddingBottom: 80,
   },
 
