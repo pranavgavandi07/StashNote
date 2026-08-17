@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Text } from 'react-native';
 
 const HighlightedText = ({
@@ -8,39 +9,57 @@ const HighlightedText = ({
     numberOfLines,
     highlightedStyle,
 }) => {
-    const trimmedQuery = query.trim();
+    const value = String(text ?? '');
 
-    if (!trimmedQuery) {
+    const searchQuery =
+        String(query ?? '').trim();
+
+    /*
+     * No search query:
+     * render the text normally.
+     */
+    if (!searchQuery) {
         return (
             <Text
                 style={style}
                 numberOfLines={numberOfLines}>
-                {text}
+                {value}
             </Text>
         );
     }
 
-    const escapedQuery = trimmedQuery.replace(
+    /*
+     * Escape special RegExp characters so that
+     * searches such as "C++" or "(test)" work safely.
+     */
+    const escapedQuery = searchQuery.replace(
         /[.*+?^${}()|[\]\\]/g,
         '\\$&',
     );
 
-    const parts = text.split(
+    const parts = value.split(
         new RegExp(`(${escapedQuery})`, 'gi'),
     );
+
+    const normalizedQuery =
+        searchQuery.toLowerCase();
 
     return (
         <Text
             style={style}
             numberOfLines={numberOfLines}>
             {parts.map((part, index) => {
+                if (!part) {
+                    return null;
+                }
+
                 const isMatch =
                     part.toLowerCase() ===
-                    trimmedQuery.toLowerCase();
+                    normalizedQuery;
 
                 return (
                     <Text
-                        key={`${part}-${index}`}
+                        key={`${index}-${part}`}
                         style={
                             isMatch
                                 ? highlightedStyle
