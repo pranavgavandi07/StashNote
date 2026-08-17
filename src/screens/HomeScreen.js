@@ -44,7 +44,7 @@ const HomeScreen = ({ navigation }) => {
   const [showSortOptions, setShowSortOptions] =
     useState(false);
 
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async () => {
     try {
       const storedNotes = await getNotes();
 
@@ -61,12 +61,12 @@ const HomeScreen = ({ navigation }) => {
 
       setNotes([]);
     }
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       loadNotes();
-    }, []),
+    }, [loadNotes]),
   );
 
   const displayedNotes = useMemo(() => {
@@ -348,9 +348,7 @@ const HomeScreen = ({ navigation }) => {
               placeholder="Search notes..."
               placeholderTextColor="#999"
               value={searchQuery}
-              onChangeText={
-                setSearchQuery
-              }
+              onChangeText={setSearchQuery}
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="search"
@@ -433,8 +431,7 @@ const HomeScreen = ({ navigation }) => {
               ]}
               onPress={() =>
                 setShowSortOptions(
-                  previous =>
-                    !previous,
+                  previous => !previous,
                 )
               }>
               <Text style={styles.sortIcon}>
@@ -554,9 +551,7 @@ const HomeScreen = ({ navigation }) => {
       ) : (
         <FlatList
           data={displayedNotes}
-          keyExtractor={item =>
-            item.id
-          }
+          keyExtractor={item => item.id}
           renderItem={renderNote}
           showsVerticalScrollIndicator={
             false
