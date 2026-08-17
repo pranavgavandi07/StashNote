@@ -1,13 +1,16 @@
-/**
- * @format
- */
-
 import React from 'react';
-import ReactTestRenderer from 'react-test-renderer';
+import renderer, { act } from 'react-test-renderer';
+
 import App from '../App';
 
-test('renders correctly', async () => {
-  await ReactTestRenderer.act(() => {
-    ReactTestRenderer.create(<App />);
+jest.mock('@react-native-async-storage/async-storage');
+
+it('renders correctly', async () => {
+  let tree;
+
+  await act(async () => {
+    tree = renderer.create(<App />);
   });
+
+  expect(tree).toBeTruthy();
 });
