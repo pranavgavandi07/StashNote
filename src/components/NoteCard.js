@@ -10,7 +10,7 @@ import {
 import HighlightedText from './HighlightedText';
 
 import {
-    formatNoteDate,
+    formatRelativeNoteDate,
     getNoteCategory,
     getNoteDate,
     getNoteTitle,
@@ -23,8 +23,13 @@ const NoteCard = ({
     showOtherNotesDivider = false,
 }) => {
     const title = getNoteTitle(note);
-    const date = formatNoteDate(getNoteDate(note));
     const category = getNoteCategory(note);
+
+    const date = formatRelativeNoteDate(
+        getNoteDate(note),
+    );
+
+    const content = note?.content?.trim() || '';
 
     const hasIndicators =
         note?.isPinned || note?.isFavorite;
@@ -48,7 +53,9 @@ const NoteCard = ({
                     styles.noteCard,
                     pressed && styles.noteCardPressed,
                 ]}
-                onPress={onPress}>
+                onPress={onPress}
+                accessibilityRole="button"
+                accessibilityLabel={`Open note: ${title}`}>
                 <View style={styles.noteTitleRow}>
                     <HighlightedText
                         text={title}
@@ -62,17 +69,18 @@ const NoteCard = ({
 
                     {hasIndicators && (
                         <View style={styles.noteIndicators}>
-                            {note.isPinned && (
+                            {note?.isPinned && (
                                 <Text
                                     style={[
                                         styles.pinIndicator,
+                                        note?.isFavorite &&
                                         styles.indicatorSpacing,
                                     ]}>
                                     📌
                                 </Text>
                             )}
 
-                            {note.isFavorite && (
+                            {note?.isFavorite && (
                                 <Text
                                     style={styles.favoriteStar}>
                                     ★
@@ -82,9 +90,9 @@ const NoteCard = ({
                     )}
                 </View>
 
-                {note?.content ? (
+                {content ? (
                     <HighlightedText
-                        text={note.content}
+                        text={content}
                         query={searchQuery}
                         style={styles.noteContent}
                         numberOfLines={3}
@@ -148,7 +156,11 @@ const styles = StyleSheet.create({
 
     noteCardPressed: {
         opacity: 0.7,
-        transform: [{ scale: 0.99 }],
+        transform: [
+            {
+                scale: 0.99,
+            },
+        ],
     },
 
     noteTitleRow: {
@@ -201,11 +213,6 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
     },
 
-    noteDate: {
-        fontSize: 12,
-        color: '#999',
-    },
-
     noteFooter: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -221,6 +228,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 9,
         paddingVertical: 5,
         borderRadius: 8,
+    },
+
+    noteDate: {
+        fontSize: 12,
+        color: '#999',
     },
 });
 
