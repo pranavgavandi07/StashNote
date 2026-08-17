@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, {
+    useCallback,
+    useState,
+} from 'react';
 
 import {
     Alert,
@@ -9,8 +12,11 @@ import {
     View,
 } from 'react-native';
 
+import { useFocusEffect } from '@react-navigation/native';
+
 import {
     deleteNote,
+    getNotes,
     toggleFavorite,
     togglePinned,
 } from '../storage/noteStorage';
@@ -22,21 +28,55 @@ import {
 } from '../utils/noteHelpers';
 
 const NoteDetailScreen = ({ route, navigation }) => {
-    const { note } = route.params;
+    const { note: initialNote } = route.params;
 
-    const [isFavorite, setIsFavorite] = useState(
-        note.isFavorite ?? false,
-    );
-
-    const [isPinned, setIsPinned] = useState(
-        note.isPinned ?? false,
-    );
+    const [currentNote, setCurrentNote] =
+        useState(initialNote);
 
     const [isUpdatingFavorite, setIsUpdatingFavorite] =
         useState(false);
 
     const [isUpdatingPinned, setIsUpdatingPinned] =
         useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            let isActive = true;
+
+            const loadCurrentNote = async () => {
+                try {
+                    const notes = await getNotes();
+
+                    const latestNote = notes.find(
+                        item => item.id === initialNote.id,
+                    );
+
+                    if (!latestNote) {
+                        if (isActive) {
+                            navigation.goBack();
+                        }
+
+                        return;
+                    }
+
+                    if (isActive) {
+                        setCurrentNote(latestNote);
+                    }
+                } catch (error) {
+                    console.error(
+                        'Failed to load current note:',
+                        error,
+                    );
+                }
+            };
+
+            loadCurrentNote();
+
+            return () => {
+                isActive = false;
+            };
+        }, [initialNote.id, navigation]),
+    );
 
     const formatFullDate = dateString => {
         if (!dateString) {
@@ -56,15 +96,9 @@ const NoteDetailScreen = ({ route, navigation }) => {
         });
     };
 
-    const getCurrentNote = () => ({
-        ...note,
-        isFavorite,
-        isPinned,
-    });
-
     const handleEdit = () => {
         navigation.navigate('EditNote', {
-            note: getCurrentNote(),
+            note: currentNote,
         });
     };
 
@@ -77,17 +111,15 @@ const NoteDetailScreen = ({ route, navigation }) => {
             setIsUpdatingFavorite(true);
 
             const updatedNotes = await toggleFavorite(
-                note.id,
+                currentNote.id,
             );
 
             const updatedNote = updatedNotes.find(
-                item => item.id === note.id,
+                item => item.id === currentNote.id,
             );
 
             if (updatedNote) {
-                setIsFavorite(
-                    updatedNote.isFavorite ?? false,
-                );
+                setCurrentNote(updatedNote);
             }
         } catch (error) {
             console.error(
@@ -113,17 +145,15 @@ const NoteDetailScreen = ({ route, navigation }) => {
             setIsUpdatingPinned(true);
 
             const updatedNotes = await togglePinned(
-                note.id,
+                currentNote.id,
             );
 
             const updatedNote = updatedNotes.find(
-                item => item.id === note.id,
+                item => item.id === currentNote.id,
             );
 
             if (updatedNote) {
-                setIsPinned(
-                    updatedNote.isPinned ?? false,
-                );
+                setCurrentNote(updatedNote);
             }
         } catch (error) {
             console.error(
@@ -154,7 +184,9 @@ const NoteDetailScreen = ({ route, navigation }) => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await deleteNote(note.id);
+                            await deleteNote(
+                                currentNote.id,
+                            );
 
                             navigation.popToTop();
                         } catch (error) {
@@ -174,20 +206,20 @@ const NoteDetailScreen = ({ route, navigation }) => {
         );
     };
 
-    const title = getNoteTitle(note);
-    const category = getNoteCategory(note);
-    const content = note.content || '';
+    const title = getNoteTitle(currentNote);
+    const category = getNoteCategory(currentNote);
+    const content = currentNote.content || '';
 
     const createdDate = formatFullDate(
-        note.createdAt,
+        currentNote.createdAt,
     );
 
     const updatedDate = formatFullDate(
-        note.updatedAt,
+        currentNote.updatedAt,
     );
 
     const displayDate = formatFullDate(
-        getNoteDate(note),
+        getNoteDate(currentNote),
     );
 
     return (
@@ -212,7 +244,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                     <Pressable
                         style={({ pressed }) => [
                             styles.iconButton,
-                            isPinned &&
+                            currentNote.isPinned &&
                             styles.iconButtonActive,
                             pressed && styles.pressed,
                         ]}
@@ -226,7 +258,7 @@ const NoteDetailScreen = ({ route, navigation }) => {
                     <Pressable
                         style={({ pressed }) => [
                             styles.iconButton,
-                            isFavorite &&
+                            currentNote.isFavorite &&
                             styles.iconButtonActive,
                             pressed && styles.pressed,
                         ]}
@@ -235,10 +267,12 @@ const NoteDetailScreen = ({ route, navigation }) => {
                         <Text
                             style={[
                                 styles.favoriteIcon,
-                                isFavorite &&
+                                currentNote.isFavorite &&
                                 styles.favoriteIconActive,
                             ]}>
-                            {isFavorite ? '★' : '☆'}
+                            {currentNote.isFavorite
+                                ? '★'
+                                : '☆'}
                         </Text>
                     </Pressable>
 
@@ -248,7 +282,8 @@ const NoteDetailScreen = ({ route, navigation }) => {
                             pressed && styles.pressed,
                         ]}
                         onPress={handleEdit}>
-                        <Text style={styles.editTopButtonText}>
+                        <Text
+                            style={styles.editTopButtonText}>
                             Edit
                         </Text>
                     </Pressable>
@@ -264,14 +299,17 @@ const NoteDetailScreen = ({ route, navigation }) => {
                             {title}
                         </Text>
 
-                        {isPinned && (
+                        {currentNote.isPinned && (
                             <Text style={styles.titlePin}>
                                 📌
                             </Text>
                         )}
 
-                        {isFavorite && (
-                            <Text style={styles.titleFavorite}>
+                        {currentNote.isFavorite && (
+                            <Text
+                                style={
+                                    styles.titleFavorite
+                                }>
                                 ★
                             </Text>
                         )}
@@ -279,7 +317,8 @@ const NoteDetailScreen = ({ route, navigation }) => {
 
                     <View style={styles.noteMeta}>
                         <View style={styles.categoryBadge}>
-                            <Text style={styles.categoryText}>
+                            <Text
+                                style={styles.categoryText}>
                                 {category}
                             </Text>
                         </View>
@@ -300,30 +339,45 @@ const NoteDetailScreen = ({ route, navigation }) => {
 
                 {(createdDate || updatedDate) && (
                     <View style={styles.noteInfoSection}>
-                        <Text style={styles.noteInfoTitle}>
+                        <Text
+                            style={styles.noteInfoTitle}>
                             Note Info
                         </Text>
 
                         <View style={styles.noteInfoCard}>
                             {createdDate ? (
-                                <View style={styles.infoRow}>
-                                    <Text style={styles.infoLabel}>
+                                <View
+                                    style={styles.infoRow}>
+                                    <Text
+                                        style={
+                                            styles.infoLabel
+                                        }>
                                         Created
                                     </Text>
 
-                                    <Text style={styles.infoValue}>
+                                    <Text
+                                        style={
+                                            styles.infoValue
+                                        }>
                                         {createdDate}
                                     </Text>
                                 </View>
                             ) : null}
 
                             {updatedDate ? (
-                                <View style={styles.infoRow}>
-                                    <Text style={styles.infoLabel}>
+                                <View
+                                    style={styles.infoRow}>
+                                    <Text
+                                        style={
+                                            styles.infoLabel
+                                        }>
                                         Last updated
                                     </Text>
 
-                                    <Text style={styles.infoValue}>
+                                    <Text
+                                        style={
+                                            styles.infoValue
+                                        }>
                                         {updatedDate}
                                     </Text>
                                 </View>
@@ -350,7 +404,8 @@ const NoteDetailScreen = ({ route, navigation }) => {
                             pressed && styles.pressed,
                         ]}
                         onPress={handleDelete}>
-                        <Text style={styles.deleteButtonText}>
+                        <Text
+                            style={styles.deleteButtonText}>
                             Delete Note
                         </Text>
                     </Pressable>
