@@ -10,7 +10,7 @@ jest.mock('../src/storage/noteStorage', () => ({
 }));
 
 jest.mock('react-native', () => {
-    const React = require('react');
+    const ReactLib = require('react');
 
     const View = ({ children, ...props }) => (
         <div {...props}>{children}</div>
@@ -67,7 +67,7 @@ jest.mock('react-native', () => {
     }) => (
         <div {...props}>
             {data.map((item, index) => (
-                <React.Fragment
+                <ReactLib.Fragment
                     key={
                         keyExtractor
                             ? keyExtractor(item, index)
@@ -77,7 +77,7 @@ jest.mock('react-native', () => {
                         item,
                         index,
                     })}
-                </React.Fragment>
+                </ReactLib.Fragment>
             ))}
         </div>
     );
