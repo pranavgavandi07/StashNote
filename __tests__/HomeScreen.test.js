@@ -1,9 +1,6 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 
-import HomeScreen from '../src/screens/HomeScreen';
-import { getNotes } from '../src/storage/noteStorage';
-
 jest.mock('@react-navigation/native', () => ({
     useFocusEffect: callback => callback(),
 }));
@@ -11,6 +8,97 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('../src/storage/noteStorage', () => ({
     getNotes: jest.fn(),
 }));
+
+jest.mock('react-native', () => {
+    const React = require('react');
+
+    const View = ({ children, ...props }) => (
+        <div {...props}>{children}</div>
+    );
+
+    const Text = ({ children, ...props }) => (
+        <span {...props}>{children}</span>
+    );
+
+    const Pressable = ({
+        children,
+        onPress,
+        ...props
+    }) => (
+        <button
+            {...props}
+            onClick={onPress}>
+            {typeof children === 'function'
+                ? children({
+                    pressed: false,
+                })
+                : children}
+        </button>
+    );
+
+    const TextInput = ({
+        value,
+        onChangeText,
+        placeholder,
+        ...props
+    }) => (
+        <input
+            {...props}
+            value={value}
+            placeholder={placeholder}
+            onChange={event =>
+                onChangeText(event.target.value)
+            }
+        />
+    );
+
+    const ScrollView = ({
+        children,
+        ...props
+    }) => (
+        <div {...props}>{children}</div>
+    );
+
+    const FlatList = ({
+        data = [],
+        renderItem,
+        keyExtractor,
+        ...props
+    }) => (
+        <div {...props}>
+            {data.map((item, index) => (
+                <React.Fragment
+                    key={
+                        keyExtractor
+                            ? keyExtractor(item, index)
+                            : index
+                    }>
+                    {renderItem({
+                        item,
+                        index,
+                    })}
+                </React.Fragment>
+            ))}
+        </div>
+    );
+
+    const StyleSheet = {
+        create: styles => styles,
+    };
+
+    return {
+        View,
+        Text,
+        Pressable,
+        TextInput,
+        ScrollView,
+        FlatList,
+        StyleSheet,
+    };
+});
+
+import HomeScreen from '../src/screens/HomeScreen';
+import { getNotes } from '../src/storage/noteStorage';
 
 const mockNavigation = {
     navigate: jest.fn(),
@@ -57,7 +145,7 @@ const createScreen = async () => {
 
 const getTextValues = tree =>
     tree.root
-        .findAllByType('Text')
+        .findAllByType('span')
         .map(node => node.children.join(''));
 
 beforeEach(() => {
@@ -79,11 +167,14 @@ describe('HomeScreen', () => {
 
         const searchInput = tree.root.find(
             node =>
-                node.props.placeholder === 'Search notes...',
+                node.props.placeholder ===
+                'Search notes...',
         );
 
         await act(async () => {
-            searchInput.props.onChangeText('groceries');
+            searchInput.props.onChangeText(
+                'groceries',
+            );
         });
 
         const textValues = getTextValues(tree);
