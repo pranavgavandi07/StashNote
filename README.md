@@ -1,97 +1,176 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# StashNote
 
-# Getting Started
+> **Capture it. Find it.**
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+StashNote is a lightweight React Native note-taking app designed to keep thoughts, ideas, reminders, and important information organized in one place.
 
-## Step 1: Start Metro
+The app focuses on a clean and simple experience while providing useful everyday features such as search, categories, favorites, pinning, and sorting.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Features
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+* Create, edit, and delete notes
+* Search notes by title, content, or category
+* Organize notes with categories:
 
-```sh
-# Using npm
+  * Personal
+  * Work
+  * Important
+  * Ideas
+* Mark notes as favorites
+* Pin important notes
+* Sort notes by:
+
+  * Recently Updated
+  * Recently Created
+  * A → Z
+  * Z → A
+* Relative date display for recent notes
+* Unsaved-changes protection while editing
+* Persistent local storage using AsyncStorage
+* Safe note data normalization
+* Empty-state and no-results handling
+* Automated testing with Jest
+* ESLint validation
+
+## Tech Stack
+
+* React Native 0.86.2
+* React 19.2.3
+* JavaScript
+* React Navigation
+* React Native Paper
+* AsyncStorage
+* Jest
+* ESLint
+
+## Project Structure
+
+```text
+StashNote/
+├── src/
+│   ├── components/
+│   │   ├── HighlightedText.js
+│   │   └── NoteCard.js
+│   ├── navigation/
+│   │   └── AppNavigator.js
+│   ├── screens/
+│   │   ├── AddNoteScreen.js
+│   │   ├── EditNoteScreen.js
+│   │   ├── HomeScreen.js
+│   │   └── NoteDetailScreen.js
+│   ├── storage/
+│   │   └── noteStorage.js
+│   └── utils/
+│       └── noteHelpers.js
+├── __tests__/
+│   ├── App.test.tsx
+│   ├── EditNoteScreen.test.js
+│   ├── HomeScreen.test.js
+│   ├── NoteDetailScreen.test.js
+│   ├── noteHelpers.test.js
+│   └── noteStorage.test.js
+├── App.js
+└── package.json
+```
+
+## Getting Started
+
+### Prerequisites
+
+You will need:
+
+* Node.js
+* npm
+* Java Development Kit
+* Android Studio
+* Android SDK
+* Android emulator or physical Android device
+
+### Install dependencies
+
+```bash
+npm install
+```
+
+### Start Metro
+
+```bash
 npm start
-
-# OR using Yarn
-yarn start
 ```
 
-## Step 2: Build and run your app
+### Run Android
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+Open another terminal and run:
 
-### Android
-
-```sh
-# Using npm
+```bash
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
+## Development Commands
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### Run lint
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```bash
+npm run lint
 ```
 
-Then, and every time you update your native dependencies, run:
+### Run tests
 
-```sh
-bundle exec pod install
+```bash
+npm test -- --runInBand
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## Testing
 
-```sh
-# Using npm
-npm run ios
+StashNote currently has:
 
-# OR using Yarn
-yarn ios
+* 6 test suites
+* 85 passing tests
+* ESLint passing
+* Physical Android device verification
+
+Latest test result:
+
+```text
+Test Suites: 6 passed, 6 total
+Tests:       85 passed, 85 total
+Snapshots:   0 total
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## Data Storage
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+StashNote stores notes locally on the device using AsyncStorage.
 
-## Step 3: Modify your app
+The current version does not require a backend, account, or internet connection for basic note-taking.
 
-Now that you have successfully run the app, let's make changes!
+## Screenshots
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+Screenshots can be added here to showcase:
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+* Home screen
+* Add Note screen
+* Note Detail screen
+* Edit Note screen
+* Search and filtering
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+## Future Improvements
 
-## Congratulations! :tada:
+Possible future improvements include:
 
-You've successfully run and modified your React Native App. :partying_face:
+* Cloud synchronization
+* Backup and restore
+* Rich text formatting
+* Dark mode
+* Note reminders
+* Additional customization
+* More advanced search and filtering
 
-### Now what?
+## Project Status
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+**Development complete for the current feature set.**
 
-# Troubleshooting
+The application has been linted, tested, and verified on a physical Android device.
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+## License
 
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+This project is currently intended as a personal portfolio project.
