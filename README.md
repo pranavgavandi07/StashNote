@@ -143,16 +143,6 @@ StashNote stores notes locally on the device using AsyncStorage.
 
 The current version does not require a backend, account, or internet connection for basic note-taking.
 
-## Screenshots
-
-Screenshots can be added here to showcase:
-
-* Home screen
-* Add Note screen
-* Note Detail screen
-* Edit Note screen
-* Search and filtering
-
 ## Future Improvements
 
 Possible future improvements include:
@@ -174,3 +164,15 @@ The application has been linted, tested, and verified on a physical Android devi
 ## License
 
 This project is currently intended as a personal portfolio project.
+### Home
+
+<p align="center">
+  <img src="screenshots/home.png" alt="StashNote Home screen" width="32%">
+</p>
+
+### Sort Notes
+
+<p align="center">
+  <img src="screenshots/sort-notes.png" alt="StashNote Sort Notes menu" width="32%">
+</p>
+
